@@ -58,7 +58,7 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
   const pending = inflight.get(input);
   if (pending) return pending;
 
-  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-mini';
+  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-nano';
   const p: Promise<any> = (async () => {
     try {
       const resp = await client.chat.completions.create({
