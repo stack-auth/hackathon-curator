@@ -11,6 +11,7 @@
 	const progress = $('progress');
 	const progressFill = document.getElementById('progressFill');
 	const progressLabel = document.getElementById('progressLabel');
+	const analyzeLabel = document.getElementById('analyzeLabel');
 
 	let progressTotal = 0;
 	let progressDone = 0;
@@ -18,9 +19,10 @@
 	function setLoading(isLoading) {
 		if (analyzeBtn) analyzeBtn.disabled = isLoading;
 		if (spinner) spinner.classList.toggle('hidden', !isLoading);
-		if (analyzeBtn) analyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Analyze';
+		if (analyzeLabel) analyzeLabel.classList.toggle('hidden', !!isLoading);
 		if (status) status.textContent = isLoading ? 'Running analysis on uncommitted files…' : '';
 		if (isLoading && resultsEl) resultsEl.innerHTML = '';
+		if (progress) progress.classList.toggle('hidden', !isLoading);
 	}
 
 	function escapeHtml(text) {
@@ -134,6 +136,9 @@
 				const pct = progressTotal > 0 ? Math.round((progressDone / progressTotal) * 100) : 0;
 				progressFill.style.width = pct + '%';
 			}
+			if (progress && progressDone >= progressTotal) {
+				progress.classList.add('hidden');
+			}
 		}
 	}
 
@@ -154,8 +159,8 @@
 			resultsEl.addEventListener('mouseleave', function () { hideTooltip(); });
 			resultsEl.addEventListener('click', function (e) {
 				const target = e.target;
-				if (!(target instanceof HTMLElement)) return;
-				const openBtn = target.closest('.open-file');
+				if (!(target instanceof Element)) return;
+				const openBtn = (target.closest && target.closest('.open-file')) ? target.closest('.open-file') : null;
 				if (openBtn) {
 					const filename = openBtn.getAttribute('data-file');
 					if (filename) {

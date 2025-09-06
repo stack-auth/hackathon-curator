@@ -47,10 +47,11 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
   <title>Curator</title>
   <style>
     body { font-family: var(--vscode-font-family); margin: 0; padding: 12px; }
-    button { width: 100%; padding: 8px 12px; cursor: pointer; }
+    #analyze { width: 100%; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
     .header { display: flex; align-items: center; gap: 8px; }
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--vscode-foreground); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
     .spinner.hidden { display: none; }
+    .hidden { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .status { margin-top: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
     .results { margin-top: 12px; border-top: 1px solid var(--vscode-editorWidget-border); padding-top: 12px; }
@@ -81,10 +82,9 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
   <div class="header">
-    <button id="analyze">Analyze</button>
-    <div id="spinner" class="spinner hidden"></div>
+    <button id="analyze"><span id="analyzeLabel">Analyze</span><div id="spinner" class="spinner hidden" aria-label="Loading" role="progressbar"></div></button>
   </div>
-  <div id="progress" class="progress" aria-live="polite" aria-atomic="true">
+  <div id="progress" class="progress hidden" aria-live="polite" aria-atomic="true">
     <div class="bar"><div id="progressFill" class="fill"></div></div>
     <div id="progressLabel" class="label"></div>
   </div>
