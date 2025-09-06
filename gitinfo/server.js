@@ -60,11 +60,11 @@ app.post("/last-commit", async (req, res) => {
     }
 
     // Try git log first, then fallback to octokit
-    const commit = await getLastCommit(file);
+    const lastCommitToThisFile = await getLastCommit(file);
     const fileStats = await getFileStats(file);
 
     res.json({
-      file, commit, fileStats
+      file, lastCommitToThisFile, fileStats
     });
   } catch (err) {
     console.error("Error:", err);
