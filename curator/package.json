@@ -38,17 +38,11 @@
       "curator": [
         {
           "id": "curatorView",
-          "name": "Curator"
+          "name": "Curator",
+          "type": "webview"
         }
       ]
-    },
-    "viewsWelcome": [
-      {
-        "view": "curatorView",
-        "contents": "Click the button below to start.\n[Analyze](command:curator.analyzeUncommittedDiff)",
-        "when": "true"
-      }
-    ]
+    }
   },
   "scripts": {
     "dev": "cursor --extensionDevelopmentPath=$(pwd)",

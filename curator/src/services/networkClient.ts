@@ -12,7 +12,7 @@ const DEFAULT_SERVER_URL = 'http://localhost:3005/file';
 
 export async function postFileDiff(fileDiff: string, file: string, serverUrl: string = DEFAULT_SERVER_URL): Promise<AnalyzeResponse> {
 	const controller = new AbortController();
-	const timeout = setTimeout(() => controller.abort(), 10_000);
+	const timeout = setTimeout(() => controller.abort(), 120_000);
 	try {
 		const res = await fetch(serverUrl, {
 			method: 'POST',

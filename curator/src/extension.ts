@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	const provider = new CuratorViewProvider();
+	const provider = new CuratorViewProvider(context.extensionUri);
 	const providerRegistration = vscode.window.registerWebviewViewProvider(CuratorViewProvider.viewType, provider);
 
 	context.subscriptions.push(disposable, analyzeDisposable, providerRegistration);
