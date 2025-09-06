@@ -13,15 +13,12 @@ const execPromise = util.promisify(exec);
 
 app.use(express.json());
 
-async function getLastCommitFromGit(file) {
+async function runGitCommand(cmd) {
   try {
-    const { stdout } = await execPromise(
-      `git log -1 --pretty=format:%s -- ${file}`,
-      { cwd: repoRoot}
-    );
-    return stdout.trim() || null;
+    const { stdout } = await execPromise(cmd, { cwd: repoRoot });
+    return stdout.trim();
   } catch (err) {
-    // If git fails, return null (let caller decide to fallback)
+    console.error("Git error:", err.message);
     return null;
   }
 }
@@ -33,6 +30,28 @@ async function getLastCommitFromOctokit(file) {
   return "[stub] Octokit commit message for " + file;
 }
 
+async function getLastCommit(file) {
+  const lastCommitRaw = await runGitCommand(
+    `git log -1 --pretty=format:"%H|%s|%cI" -- ${file}`
+  );
+  if (!lastCommitRaw){
+    const message = getLastCommitFromOctokit(file)
+    return null;
+  } 
+  const [hash, message, date] = lastCommitRaw.split("|");
+  return { hash, message, date };
+}
+
+async function getFileStats(file) {
+  const recentCommitsRaw = await runGitCommand(
+    `git log --since="7 days ago" --pretty=oneline -- ${file}`
+  );
+  const commitsLastWeek = recentCommitsRaw
+    ? recentCommitsRaw.split("\n").filter(Boolean).length
+    : 0;
+  return { commitsLastWeek };
+}
+
 app.post("/last-commit", async (req, res) => {
   try {
     const { file } = req.body;
@@ -40,18 +59,12 @@ app.post("/last-commit", async (req, res) => {
       return res.status(400).json({ error: "Missing 'file' in request body" });
     }
 
-    // Try git log first
-    let message = await getLastCommitFromGit(file);
-
-    // If that failed, fallback to Octokit stub
-    if (!message) {
-      message = await getLastCommitFromOctokit(file);
-    }
+    // Try git log first, then fallback to octokit
+    const commit = await getLastCommit(file);
+    const fileStats = await getFileStats(file);
 
     res.json({
-      file,
-      lastCommitMessage: message,
-      source: message?.startsWith("[stub]") ? "octokit" : "git",
+      file, commit, fileStats
     });
   } catch (err) {
     console.error("Error:", err);
