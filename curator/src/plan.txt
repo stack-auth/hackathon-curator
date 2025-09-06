@@ -1,0 +1,102 @@
+/*
+Curator Extension Plan (TypeScript-focused)
+
+Goal
+- Provide a VS Code command that finds uncommitted files (Git), selects the first one
+  (ignores the rest), computes its unified diff, POSTs it to http://localhost:3005/file
+  with JSON body { file_diff: string }, receives { tokenScores: TokenScore[] }, and
+  renders a heatmap view where each token is colored by score from green (0) → red (1).
+  The score indicates likelihood of error or security vulnerability.
+
+API contract (client expectations)
+- Request body
+  type AnalyzeRequest = {
+    file_diff: string;
+  };
+
+- Response body
+  type TokenScore = {
+    token: string;
+    score: number | null; // 0..1 or null
+  };
+  type AnalyzeResponse = {
+    tokenScores: TokenScore[];
+  };
+
+Files to update/create
+- package.json
+  - contributes.commands += { command: "curator.analyzeUncommittedDiff", title: "Curator: Analyze Uncommitted Diff" }
+  - activationEvents += ["onCommand:curator.analyzeUncommittedDiff"]
+- src/extension.ts
+  - Register the command and orchestrate the flow
+- src/services/gitService.ts
+  - Acquire first uncommitted file and build unified diff text
+- src/services/networkClient.ts
+  - POST to http://localhost:3005/file and parse response { tokenScores }
+- src/ui/heatmapView.ts
+  - Render tokens with score-based background colors in a webview
+- src/types.ts
+  - Share TokenScore, AnalyzeRequest, AnalyzeResponse across the extension
+
+Orchestration flow (src/extension.ts)
+1) Register command "curator.analyzeUncommittedDiff".
+2) On execution, show progress ("Analyzing uncommitted changes…").
+3) Acquire Git extension API:
+   - const gitExt = vscode.extensions.getExtension('vscode.git'); await gitExt?.activate();
+   - const api = gitExt?.exports.getAPI(1);
+   - const repo = api?.repositories[0]; if none → error: "No Git repository found."
+4) Collect uncommitted working tree changes:
+   - const changes = repo.state.workingTreeChanges;
+   - if changes.length === 0 → info: "No uncommitted files detected."
+   - const firstChange = changes[0]; // per requirements, ignore others
+5) Build unified diff string for the selected file only:
+   - Preferred: await repo.diffWithHEAD(firstChange.uri);
+   - Fallback: execute `git diff --no-ext-diff --unified=3 -- <relativePath>` in repo root
+   - If diff empty or binary → warn and stop
+   - Optionally validate size (e.g., warn if > ~500KB)
+6) POST to analyzer:
+   - URL: "http://localhost:3005/file"
+   - Method: POST, headers: { 'Content-Type': 'application/json' }
+   - Body: JSON.stringify({ file_diff: diffText })
+   - Timeout ~10s, catch ECONNREFUSED → error: "Start analyzer at localhost:3005."
+   - Parse JSON → { tokenScores }
+   - Validate structure: Array of { token: string, score: number|null }
+7) Render heatmap view in a WebviewPanel:
+   - Title: `Risk Heatmap: <filename>`
+   - CSP: no remote resources; inline CSS; sanitize user content
+   - Layout: monospace text in <pre> with white-space: pre-wrap; wrap long lines
+   - For each tokenScores[i]:
+     - If score === null → neutral background (transparent/subtle gray)
+     - Else score ∈ [0,1] → background via green→red interpolation
+     - Tooltip/title attribute with precise score (e.g., 0.42)
+   - Optional toggle: "Raw diff" vs "Heatmap"
+
+Color mapping (score → background color)
+- HSL interpolation from green to red:
+  const clamped = Math.min(1, Math.max(0, score));
+  const hue = 120 - Math.round(clamped * 120); // 0→red, 120→green
+  const color = `hsl(${hue}, 85%, 80%)`;
+- Consider light/dark theme contrast tuning (lightness/saturation tweaks)
+
+UX and resilience
+- Progress notifications for diff and network
+- Clear errors for: missing repo, no changes, server down, invalid response, large/binary diffs
+- Only the first uncommitted file is processed; others are ignored by design
+- Consider rate-limiting if command spammed
+
+Configuration (future)
+- curator.serverUrl: string (default: "http://localhost:3005/file")
+- curator.maxPayloadBytes: number
+
+Build & packaging
+- Reuse esbuild; ensure vscode modules are externalized; Node >= 18 for fetch()
+- If needed, add undici for fetch; otherwise rely on global fetch
+
+Manual validation (later)
+- Make an uncommitted change → run command → verify diff payload and webview heatmap
+- Confirm colors: 0→green, 1→red, null→neutral; interpolation looks smooth and legible
+
+Out of scope (for now)
+- Implementing the localhost:3005 server
+- Handling multiple files, staging-specific diffs, or git submodules
+*/

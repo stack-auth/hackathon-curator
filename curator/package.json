@@ -9,13 +9,19 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:curator.analyzeUncommittedDiff"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "curator.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "curator.analyzeUncommittedDiff",
+        "title": "Curator: Analyze Uncommitted Diff"
       }
     ]
   },

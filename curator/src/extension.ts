@@ -19,7 +19,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from extension v2!');
 	});
 
-	context.subscriptions.push(disposable);
+	const analyzeDisposable = vscode.commands.registerCommand('curator.analyzeUncommittedDiff', async () => {
+		vscode.window.showInformationMessage('Curator: Analyze Uncommitted Diff (stub)');
+	});
+
+	context.subscriptions.push(disposable, analyzeDisposable);
 }
 
 // This method is called when your extension is deactivated
