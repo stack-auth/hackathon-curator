@@ -7,6 +7,7 @@
 	const spinner = $('spinner');
 	const status = $('status');
 	const resultsEl = $('results');
+	const tooltip = $('tooltip');
 
 	function setLoading(isLoading) {
 		if (analyzeBtn) analyzeBtn.disabled = isLoading;
@@ -45,14 +46,29 @@
 			const score = item ? item.score : null;
 			const reason = item ? item.reason : null;
 			let style = '';
-			let title = '';
 			if (score !== null && score !== undefined) {
 				style = 'background:' + scoreToColor(score) + ';';
-				title = 'score: ' + clamp01(score).toFixed(3) + (reason ? '\nreason: ' + String(reason) : '');
 			}
-			parts.push('<span class="tok" style="' + style + '" title="' + escapeHtml(title) + '">' + token + '</span>');
+			const title = score !== null && score !== undefined ? ('score: ' + clamp01(score).toFixed(3) + (reason ? '\nreason: ' + String(reason) : '')) : '';
+			parts.push('<span class="tok" data-tip="' + escapeHtml(title) + '" style="' + style + '">' + token + '</span>');
 		}
 		return parts.join('');
+	}
+
+	function showTooltip(text, x, y) {
+		if (!tooltip) return;
+		if (!text) { hideTooltip(); return; }
+		tooltip.textContent = text;
+		tooltip.style.left = (x + 10) + 'px';
+		tooltip.style.top = (y + 10) + 'px';
+		tooltip.classList.add('visible');
+		tooltip.setAttribute('aria-hidden', 'false');
+	}
+
+	function hideTooltip() {
+		if (!tooltip) return;
+		tooltip.classList.remove('visible');
+		tooltip.setAttribute('aria-hidden', 'true');
 	}
 
 	function onAnalyzeClick() {
@@ -89,6 +105,29 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		if (analyzeBtn) analyzeBtn.addEventListener('click', onAnalyzeClick);
 		window.addEventListener('message', onMessage);
+		if (resultsEl) {
+			resultsEl.addEventListener('mousemove', function (e) {
+				const target = e.target;
+				if (!(target instanceof HTMLElement)) return;
+				if (target.classList.contains('tok')) {
+					const tip = target.getAttribute('data-tip') || '';
+					showTooltip(tip, e.clientX, e.clientY);
+				} else {
+					hideTooltip();
+				}
+			});
+			resultsEl.addEventListener('mouseleave', function () { hideTooltip(); });
+			resultsEl.addEventListener('click', function (e) {
+				const target = e.target;
+				if (!(target instanceof HTMLElement)) return;
+				if (target.classList.contains('filename')) {
+					const fileEl = target.parentElement;
+					if (fileEl && fileEl.classList.contains('file')) {
+						fileEl.classList.toggle('collapsed');
+					}
+				}
+			});
+		}
 		try { vscode.postMessage({ type: 'ready' }); } catch (e) {}
 	});
 })();

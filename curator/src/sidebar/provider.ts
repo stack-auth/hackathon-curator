@@ -46,9 +46,15 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     .results { margin-top: 12px; border-top: 1px solid var(--vscode-editorWidget-border); padding-top: 12px; }
     .code { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12.5px; }
     .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: #fff; }
-    .file { margin-top: 12px; }
-    .filename { margin-bottom: 6px; font-weight: 600; }
+    .file { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--vscode-editorWidget-border); }
+    .filename { margin-bottom: 6px; font-weight: 600; cursor: pointer; user-select: none; }
+    .filename::before { content: '▼ '; color: var(--vscode-descriptionForeground); }
+    .file.collapsed .filename::before { content: '▶ '; }
+    .file.collapsed .code { display: none; }
     .error { color: var(--vscode-errorForeground); }
+
+    .tooltip { position: fixed; z-index: 1000; background: var(--vscode-editorWidget-background); color: var(--vscode-foreground); border: 1px solid var(--vscode-editorWidget-border); border-radius: 4px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); pointer-events: none; opacity: 0; transition: opacity 0.05s ease-in-out; max-width: 360px; white-space: pre-wrap; }
+    .tooltip.visible { opacity: 1; }
   </style>
 </head>
 <body>
@@ -58,6 +64,7 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
   </div>
   <div id="status" class="status"></div>
   <div id="results" class="results"></div>
+  <div id="tooltip" class="tooltip" aria-hidden="true"></div>
   <script src="${jsUri}"></script>
 </body>
 </html>`;
