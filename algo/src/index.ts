@@ -21,17 +21,24 @@ function randomInt(min: number, max: number): number {
 }
 
 function chunkTextRandomly(text: string): string[] {
-  // Prefer chunking by words grouped into random sizes for readability
-  const words = text.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-
+  // Preserve original whitespace/newlines by slicing the raw string
+  const n = text.length;
+  if (n === 0) return [];
   const chunks: string[] = [];
   let i = 0;
-  while (i < words.length) {
-    const groupSize = randomInt(1, 6); // 1..6 words per chunk
-    const slice = words.slice(i, i + groupSize);
-    chunks.push(slice.join(' '));
-    i += groupSize;
+  while (i < n) {
+    // Choose a random chunk length between 20 and 120 chars
+    const target = randomInt(20, 120);
+    let end = Math.min(i + target, n);
+    // Try to end on a whitespace boundary if possible
+    if (end < n) {
+      let j = end;
+      while (j > i && !/\s/.test(text[j])) j--;
+      if (j > i) end = j;
+    }
+    const slice = text.slice(i, end);
+    chunks.push(slice);
+    i = end;
   }
   return chunks;
 }
@@ -39,16 +46,26 @@ function chunkTextRandomly(text: string): string[] {
 function scoreTokensRandomly(tokens: string[]): TokenScore[] {
   return tokens.map((token) => {
     const nullChance = Math.random() < 0.15; // 15% chance of null
-    const score = nullChance ? null : Number(Math.random().toFixed(3));
+    const score = nullChance ? null : Number(Math.random().toFixed(3) + 1);
     return { token, score };
   });
 }
 
+// log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+app.get('/', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.post('/file', (req, res) => {
   const body = req.body as FileRequest | undefined;
 
-  const file = (body && typeof body.file === 'string') ? body.file : '';
-  const tokens = chunkTextRandomly(file);
+  const input = body?.fileDiff ?? body?.file ?? '';
+  const tokens = chunkTextRandomly(String(input));
   const tokenScores = scoreTokensRandomly(tokens);
 
   res.json({ tokenScores });
@@ -57,4 +74,3 @@ app.post('/file', (req, res) => {
 app.listen(PORT, () => {
   console.log(`algo server listening on http://localhost:${PORT}`);
 });
-

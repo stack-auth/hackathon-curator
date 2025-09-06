@@ -1,0 +1,15 @@
+diff --git a/algo/src/index.ts b/algo/src/index.ts
+index 1111111..2222222 100644
+--- a/algo/src/index.ts
++++ b/algo/src/index.ts
+@@ -1,6 +1,9 @@
+-import express from 'express';
++import express from 'express';
++// Added comment to show patch
++
+ type FileRequest = {
+   fileDiff?: string;
+   file?: string;
+ };
++
+ // ... rest of file omitted

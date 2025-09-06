@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Algo Dev UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" />
+    <style>
+      :root { --bg:#0b0e12; --fg:#e5e7eb; --muted:#94a3b8; --card:#111827; --accent:#6366f1; }
+      html, body { margin:0; padding:0; background:var(--bg); color:var(--fg); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+      header { display:flex; gap:12px; align-items:center; padding:10px 12px; border-bottom:1px solid #222; position:sticky; top:0; background:var(--bg); z-index:10; }
+      header h1 { font-size:14px; margin:0; color:var(--muted); font-weight:600; }
+      .chip { background:#1f2937; padding:4px 8px; border-radius:999px; color:#cbd5e1; font-size:12px; }
+      #container { display:grid; grid-template-columns: 260px 1fr; gap:12px; padding:12px; }
+      #sidebar { background:var(--card); border:1px solid #1f2937; border-radius:8px; overflow:auto; height:calc(100vh - 64px); }
+      #files { list-style:none; margin:0; padding:8px; }
+      #files li { padding:6px 8px; border-radius:6px; cursor:pointer; color:#cbd5e1; }
+      #files li:hover { background:#1f2937; }
+      #files li.active { background:#1f2937; color:#fff; }
+      #main { display:flex; flex-direction:column; gap:12px; }
+      .panel { background:var(--card); border:1px solid #1f2937; border-radius:8px; padding:10px; overflow:auto; }
+      .row { display:flex; gap:12px; }
+      .col { flex:1 1 0; min-width:0; }
+      pre { margin:0; white-space:pre-wrap; word-break:break-word; }
+      .tokens { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; line-height:1.5; }
+      .token-span { padding:1px 2px; border-radius:2px; margin-right:1px; }
+      .muted { color: var(--muted); }
+      .toolbar { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+      .toolbar input { background:#0b1220; color:#e5e7eb; border:1px solid #26324a; border-radius:6px; padding:6px 8px; }
+      code.hljs { background:#0b0e12; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Algo Test UI</h1>
+      <span id="status" class="chip">Loading…</span>
+      <span id="watch" class="chip"></span>
+    </header>
+
+    <div id="container">
+      <aside id="sidebar">
+        <div class="toolbar" style="padding:8px;">
+          <input id="filter" placeholder="Filter files…" />
+        </div>
+        <ul id="files"></ul>
+      </aside>
+      <main id="main">
+        <div class="panel">
+          <div class="toolbar">
+            <span class="muted">Heatmap</span>
+            <span id="fileMeta" class="chip"></span>
+          </div>
+          <pre class="tokens" id="heatmap"></pre>
+        </div>
+        <div class="panel">
+          <div class="toolbar"><span class="muted">Syntax Highlight</span></div>
+          <pre><code id="highlight" class="hljs"></code></pre>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/diff.min.js"></script>
+    <script>window.hljs && hljs.highlightAll();</script>
+    <script type="module" src="/app.js"></script>
+  </body>
+  </html>
