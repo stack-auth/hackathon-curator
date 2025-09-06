@@ -14,6 +14,27 @@ const heatmapEl = el('heatmap');
 const highlightEl = el('highlight');
 const fileMetaEl = el('fileMeta');
 const filterEl = el('filter');
+const tooltipEl = el('tooltip');
+
+function showTooltip(text, x, y) {
+  if (!text) return hideTooltip();
+  tooltipEl.textContent = text;
+  tooltipEl.classList.remove('hidden');
+  const pad = 12;
+  const rect = tooltipEl.getBoundingClientRect();
+  let left = x + pad;
+  let top = y + pad;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (left + rect.width + pad > vw) left = Math.max(pad, vw - rect.width - pad);
+  if (top + rect.height + pad > vh) top = Math.max(pad, vh - rect.height - pad);
+  tooltipEl.style.left = left + 'px';
+  tooltipEl.style.top = top + 'px';
+}
+
+function hideTooltip() {
+  tooltipEl.classList.add('hidden');
+}
 const overlayEl = el('loadingOverlay');
 const loadingTextEl = el('loadingDetail');
 const loadingBarEl = el('loadingBar');
@@ -55,13 +76,13 @@ function renderHeatmapAndCode() {
     // Preserve original content including newlines
     span.textContent = token;
     // Show optional reason on hover
-    const reason = entry && (entry.reason ?? entry.explanation);
-    if (reason !== undefined) {
-      try {
-        span.title = typeof reason === 'string' ? reason : JSON.stringify(reason);
-      } catch {
-        span.title = String(reason);
-      }
+    const reasonRaw = entry && (entry.reason ?? entry.explanation);
+    const reason = (reasonRaw && typeof reasonRaw !== 'string') ? (function(){ try { return JSON.stringify(reasonRaw); } catch { return String(reasonRaw); } })() : (reasonRaw || (null));
+    if (reason) {
+      span.style.cursor = 'help';
+      span.addEventListener('mouseenter', (e) => showTooltip(reason, e.clientX, e.clientY));
+      span.addEventListener('mousemove', (e) => showTooltip(reason, e.clientX, e.clientY));
+      span.addEventListener('mouseleave', hideTooltip);
     }
     if (score === null) {
       // no background
@@ -75,6 +96,9 @@ function renderHeatmapAndCode() {
     frag.appendChild(span);
   }
   heatmapEl.appendChild(frag);
+
+  // Hide tooltip when switching files
+  hideTooltip();
 
   // Syntax-highlight: show original code, highlight.js auto-detect
   fetch(`/raw?path=${encodeURIComponent(item.path)}`)

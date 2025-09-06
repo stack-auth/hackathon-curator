@@ -1,0 +1,89 @@
+diff --git a/app/dashboard/page.tsx b/app/dashboard/page.tsx
+index e69de29..4b825dc 100644
+--- a/app/dashboard/page.tsx
++++ b/app/dashboard/page.tsx
+@@ -0,0 +1,230 @@
+import crypto from 'crypto'
+
+const SECRET = process.env.TOKEN_SECRET || 'dev-secret'
+const KEY = crypto.createHash('sha256').update(SECRET).digest()
+
+export async function setToken(formData: FormData) {
+  'use server'
+  const token = String(formData.get('token') ?? '')
+  const iv = crypto.randomBytes(12)
+  const cipher = crypto.createCipheriv('aes-256-gcm', KEY, iv)
+  const enc = Buffer.concat([cipher.update(token, 'utf8'), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([iv, tag, enc]).toString('base64')
+}
+
+export async function revealToken(formData: FormData) {
+  'use server'
+  const b64 = String(formData.get('enc') ?? '')
+  let out = ''
+  try {
+    const raw = Buffer.from(b64, 'base64')
+    const iv = raw.subarray(0, 12)
+    const tag = raw.subarray(12, 28)
+    const data = raw.subarray(28)
+    const decipher = crypto.createDecipheriv('aes-256-gcm', KEY, iv)
+    decipher.setAuthTag(tag)
+    const dec = Buffer.concat([decipher.update(data), decipher.final()])
+    out = dec.toString('utf8')
+  } catch (e) {
+    out = ''
+  }
+  return out
+}
+
+export async function revokeToken() {
+  'use server'
+  return 'ok'
+}
+
+export default async function Page() {
+  const items = Array.from({ length: 18 }).map((_, i) => ({ id: i + 1, name: `Item ${i + 1}`, code: crypto.randomBytes(6).toString('hex'), p: (Math.sin(i + 1) + 1) / 2 }))
+  return (
+    <main style={{display:'grid',gridTemplateRows:'auto 1fr',rowGap:'16px',minHeight:'100vh',background:'#0b0e12',color:'#e5e7eb',fontFamily:'ui-sans-serif, system-ui',padding:'16px'}}>
+      <header style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'12px',padding:'8px 12px',background:'#0f172a',border:'1px solid #1f2937',borderRadius:8}}>
+        <h1 style={{margin:0,fontSize:18,letterSpacing:0.3,fontWeight:700}}>Dashboard</h1>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <form action={setToken} style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input name="token" placeholder="access token" style={{background:'#0b1220',color:'#e5e7eb',border:'1px solid #26324a',borderRadius:6,padding:'6px 8px',width:220}} />
+            <button style={{background:'#111827',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Encrypt</button>
+          </form>
+          <form action={revealToken} style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input name="enc" placeholder="encrypted" style={{background:'#0b1220',color:'#e5e7eb',border:'1px solid #26324a',borderRadius:6,padding:'6px 8px',width:300}} />
+            <button style={{background:'#111827',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Reveal</button>
+          </form>
+          <form action={revokeToken}>
+            <button style={{background:'#7c2d12',color:'#fff',border:'1px solid #9a3412',borderRadius:6,padding:'6px 10px'}}>Revoke</button>
+          </form>
+        </div>
+      </header>
+
+      <section style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div style={{background:'#0f172a',border:'1px solid #1f2937',borderRadius:8,padding:16}}>
+          <h2 style={{margin:'0 0 8px 0',fontSize:16,fontWeight:700,color:'#cbd5e1'}}>Overview</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:12}}>
+            {['Alpha','Beta','Gamma','Delta'].map((n,i)=>(<div key={i} style={{background:'#111827',border:'1px solid #1f2937',borderRadius:8,padding:12,display:'flex',flexDirection:'column',gap:6}}><div style={{fontSize:12,color:'#94a3b8'}}>{n}</div><div style={{fontSize:20,fontWeight:700}}>{Math.round(Math.random()*100)}</div></div>))}
+          </div>
+          <div style={{marginTop:12,display:'grid',gridTemplateColumns:'repeat(12,minmax(0,1fr))',gap:6}}>
+            {Array.from({length:36}).map((_,i)=>(<div key={i} style={{height:8,background:`linear-gradient(90deg,#22c55e ${(i%12)/11*100}%, #f59e0b ${(i%12)/11*100}%, #ef4444 ${(i%12)/11*100}%)`,borderRadius:99}} />))}
+          </div>
+        </div>
+        <div style={{background:'#0f172a',border:'1px solid #1f2937',borderRadius:8,padding:16}}>
+          <h2 style={{margin:'0 0 8px 0',fontSize:16,fontWeight:700,color:'#cbd5e1'}}>Content</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:12}}>
+            {items.map(x => (<article key={x.id} style={{background:'#111827',border:'1px solid #1f2937',borderRadius:8,overflow:'hidden',display:'grid',gridTemplateRows:'auto 1fr auto'}}><header style={{padding:10,borderBottom:'1px solid #1f2937',display:'flex',justifyContent:'space-between',alignItems:'center'}}><div style={{fontWeight:700}}>{x.name}</div><div style={{fontSize:12,color:'#94a3b8'}}>{x.code}</div></header><div style={{padding:12}}><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><div style={{fontSize:12,color:'#94a3b8'}}>Score</div><div style={{justifySelf:'end'}}>{Math.round(x.p*100)}%</div></div><div style={{marginTop:10,display:'grid',gap:4}}>{['lorem ipsum dolor sit amet','consectetur adipiscing elit','sed do eiusmod tempor incididunt ut labore et dolore magna aliqua','ut enim ad minim veniam'].map((t,j)=>(<div key={j} style={{fontSize:13,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t}</div>))}</div></div><footer style={{padding:10,borderTop:'1px solid #1f2937',display:'grid',gridTemplateColumns:'1fr auto auto',gap:8}}><form action={setToken} style={{display:'flex',gap:6}}><input name="token" placeholder="token" style={{background:'#0b1220',color:'#e5e7eb',border:'1px solid #26324a',borderRadius:6,padding:'6px 8px'}} /><button style={{background:'#111827',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Encrypt</button></form><form action={revealToken} style={{display:'flex',gap:6}}><input name="enc" placeholder="encrypted" style={{background:'#0b1220',color:'#e5e7eb',border:'1px solid #26324a',borderRadius:6,padding:'6px 8px'}} /><button style={{background:'#111827',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Reveal</button></form><form action={revokeToken}><button style={{background:'#7c2d12',color:'#fff',border:'1px solid #9a3412',borderRadius:6,padding:'6px 10px'}}>Revoke</button></form></footer></article>))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{background:'#0f172a',border:'1px solid #1f2937',borderRadius:8,padding:16,display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:12}}>
+        {['A','B','C','D','E','F','G','H'].map((k,i)=>(<div key={i} style={{display:'grid',gap:8,background:'#111827',border:'1px solid #1f2937',borderRadius:8,padding:12}}><div style={{fontSize:12,color:'#94a3b8'}}>Section {k}</div><div style={{fontSize:22,fontWeight:800}}>{Math.round(Math.random()*1000)}</div><div style={{display:'flex',gap:6}}><button style={{flex:1,background:'#0f172a',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Open</button><button style={{flex:1,background:'#0f172a',color:'#cbd5e1',border:'1px solid #26324a',borderRadius:6,padding:'6px 10px'}}>Share</button></div></div>))}
+      </section>
+    </main>
+  )
+}
