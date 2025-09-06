@@ -54,13 +54,12 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
   const hit = cache.get(input);
   if (hit !== undefined) return hit;
 
-  // De-dupe concurrent calls
-  const pending = inflight.get(input);
-  if (pending) return pending;
-
-  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-nano';
+  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-mini';
   const p: Promise<any> = (async () => {
     try {
+      const uuid = crypto.randomUUID();
+      console.log("llm-call " + model + " " + uuid);
+      console.time("llm-call " + model + " " + uuid);
       const resp = await client.chat.completions.create({
         model,
         // Ask for strict JSON output (single JSON object)
@@ -75,6 +74,7 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
           { role: 'user', content: input },
         ],
       });
+      console.timeEnd("llm-call " + model + " " + uuid);
       const text = resp.choices?.[0]?.message?.content ?? '';
       let parsed: any;
       try {

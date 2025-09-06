@@ -3,6 +3,7 @@ import promptLlm from "./llm";
 export type TokenScore = {
   token: string;
   score: number | null;
+  reason: string | null;
 };
 
 export type AlgoInput = {
@@ -11,10 +12,10 @@ export type AlgoInput = {
 };
 
 
-async function splitDiffIntoLines(input: AlgoInput): Promise<{ line: string, hasChanged: boolean, shouldBeReviewedScore: number }[]> {
+async function splitDiffIntoLines(input: AlgoInput): Promise<{ line: string, hasChanged: boolean, shouldBeReviewedScore?: number, shouldReviewWhy?: string }[]> {
   console.log("Splitting diff into lines...");
   const prompt = `
-    You are given a diff of a file. Return a JSON object of type { lines: { line: string, hasChanged: boolean, shouldBeReviewedScore: boolean, shouldReviewWhy: string }[] }. You should only have the "post-diff" array of lines in the JSON object, with the hasChanged true or false. shouldBeReviewedScore is a number from 0 to 1 that indicates how careful the reviewer should be when reviewing this line of code. Anything that feels like it might be off or might warrant a comment should have a high score, even if it's technically correct. shouldReviewWhy should be an extremely concise (2-8 words) hint on why the reviewer should maybe review this line of code.
+    You are given a diff of a file. Return a JSON object of type { lines: { line: string, hasChanged: boolean, shouldBeReviewedScore: boolean, shouldReviewWhy: string }[] }. You should only have the "post-diff" array of lines in the JSON object, with the hasChanged true or false. shouldBeReviewedScore and shouldReviewWhy should only be given if hasChanged is true. shouldBeReviewedScore is a number from 0 to 1 that indicates how careful the reviewer should be when reviewing this line of code. Anything that feels like it might be off or might warrant a comment should have a high score, even if it's technically correct. shouldReviewWhy should be an extremely concise (2-8 words) hint on why the reviewer should maybe review this line of code. DO NOT BE LAZY DO THE ENTIRE FILE. FROM START TO FINISH. DO NOT BE LAZY.
 
     The diff:
     ${input.fileDiff}
@@ -29,7 +30,8 @@ export async function computeTokenScores(input: AlgoInput): Promise<{ tokenScore
   return {  
     tokenScores: (await splitDiffIntoLines(input)).map((line) => ({
       token: line.line + "\n",
-      score: line.hasChanged ? line.shouldBeReviewedScore : null,
+      score: line.hasChanged ? line.shouldBeReviewedScore ?? null : null,
+      reason: line.hasChanged ? line.shouldReviewWhy ?? null : null,
     })),
   };
 }
