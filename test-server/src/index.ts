@@ -21,7 +21,7 @@ const PORT = Number(process.env.PORT || 3030);
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 // Input + watch dirs (comma-separated). Default to 'files/test-server'.
-const INPUT_DIRS = (process.env.INPUT_DIRS || 'files/test-server')
+const INPUT_DIRS = (process.env.INPUT_DIRS || 'files/training-set')
   .split(',')
   .map((d) => d.trim())
   .filter(Boolean);
