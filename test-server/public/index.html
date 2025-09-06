@@ -39,9 +39,14 @@
       .loader .fill { background:linear-gradient(90deg, #22c55e, #f59e0b, #ef4444); height:100%; width:0%; transition:width .15s ease-in-out; border-radius:999px; }
       .spinner { width:28px; height:28px; border:4px solid #64748b; border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite; display:inline-block; vertical-align:middle; margin-right:10px; }
       @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Hover tooltip for token reasons */
+      .tooltip { position:fixed; z-index:2000; max-width:min(520px, 80vw); background:#0f172a; color:#e5e7eb; border:1px solid #243152; border-radius:8px; padding:8px 10px; box-shadow:0 8px 24px rgba(0,0,0,0.45); font-size:12px; line-height:1.35; pointer-events:none; }
+      .tooltip.hidden { display:none; }
     </style>
   </head>
   <body>
+    <div id="tooltip" class="tooltip hidden"></div>
     <div id="loadingOverlay" class="overlay hidden">
       <div class="loader">
         <div class="spinner"></div>
