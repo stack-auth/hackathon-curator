@@ -6,13 +6,14 @@
 	const analyzeBtn = $('analyze');
 	const spinner = $('spinner');
 	const status = $('status');
-	const codeEl = $('code');
+	const resultsEl = $('results');
 
 	function setLoading(isLoading) {
 		if (analyzeBtn) analyzeBtn.disabled = isLoading;
 		if (spinner) spinner.classList.toggle('hidden', !isLoading);
 		if (analyzeBtn) analyzeBtn.textContent = isLoading ? 'Analyzing…' : 'Analyze';
-		if (status) status.textContent = isLoading ? 'Running analysis on first uncommitted file…' : '';
+		if (status) status.textContent = isLoading ? 'Running analysis on uncommitted files…' : '';
+		if (isLoading && resultsEl) resultsEl.innerHTML = '';
 	}
 
 	function escapeHtml(text) {
@@ -51,7 +52,7 @@
 			}
 			parts.push('<span class="tok" style="' + style + '" title="' + escapeHtml(title) + '">' + token + '</span>');
 		}
-		if (codeEl) codeEl.innerHTML = parts.join('');
+		return parts.join('');
 	}
 
 	function onAnalyzeClick() {
@@ -67,10 +68,18 @@
 			setLoading(false);
 			if (msg.error) {
 				if (status) status.textContent = msg.error;
-				if (codeEl) codeEl.textContent = '';
+				if (resultsEl) resultsEl.textContent = '';
 			} else {
 				if (status) status.textContent = msg.filename ? ('Results for: ' + msg.filename) : '';
-				renderTokens(msg.tokenScores || []);
+				if (resultsEl) resultsEl.innerHTML = '<div class="file">\n  <div class="filename">' + (msg.filename ? msg.filename : '') + '</div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
+			}
+		} else if (msg.type === 'renderFile') {
+			if (!resultsEl) return;
+			const safeName = escapeHtml(msg.filename || '');
+			if (msg.error) {
+				resultsEl.innerHTML += '<div class="file">\n  <div class="filename">' + safeName + '</div>\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
+			} else {
+				resultsEl.innerHTML += '<div class="file">\n  <div class="filename">' + safeName + '</div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
 			}
 		} else if (msg.type === 'status') {
 			if (status) status.textContent = msg.text || '';

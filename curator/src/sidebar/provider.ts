@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getFirstUncommittedFileDiff } from '../services/gitService';
+import { getAllUncommittedFileDiffs } from '../services/gitService';
 import { postFileDiff } from '../services/networkClient';
 
 export class CuratorViewProvider implements vscode.WebviewViewProvider {
@@ -21,8 +21,6 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 			console.log('[Curator] webview message', msg);
 			if (msg?.type === 'analyze') {
 				await this.runAnalysis();
-			} else if (msg?.type === 'ready') {
-				await this.postStatus('Curator webview ready');
 			}
 		});
 	}
@@ -48,6 +46,9 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     .results { margin-top: 12px; border-top: 1px solid var(--vscode-editorWidget-border); padding-top: 12px; }
     .code { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12.5px; }
     .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: #fff; }
+    .file { margin-top: 12px; }
+    .filename { margin-bottom: 6px; font-weight: 600; }
+    .error { color: var(--vscode-errorForeground); }
   </style>
 </head>
 <body>
@@ -56,7 +57,7 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     <div id="spinner" class="spinner hidden"></div>
   </div>
   <div id="status" class="status"></div>
-  <div id="results" class="results"><div class="code" id="code"></div></div>
+  <div id="results" class="results"></div>
   <script src="${jsUri}"></script>
 </body>
 </html>`;
@@ -80,18 +81,25 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 		}
 		await view.webview.postMessage({ type: 'loading', value: true });
 		try {
-			const diffResult = await getFirstUncommittedFileDiff();
-			if (!diffResult) {
-				await view.webview.postMessage({ type: 'render', error: 'No uncommitted file to analyze.' });
+			const diffs = await getAllUncommittedFileDiffs();
+			if (!diffs || diffs.length === 0) {
+				await view.webview.postMessage({ type: 'render', error: 'No uncommitted files to analyze.' });
 				return;
 			}
-			const doc = await vscode.workspace.openTextDocument(diffResult.fileUri);
-			const fileText = doc.getText();
-			const response = await postFileDiff(diffResult.diffText, fileText);
-			await view.webview.postMessage({ type: 'render', filename: diffResult.relativePath, tokenScores: response.tokenScores });
-		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to analyze diff.';
-			await view.webview.postMessage({ type: 'render', error: message });
+
+			const tasks = diffs.map(async (diffResult) => {
+				try {
+					const doc = await vscode.workspace.openTextDocument(diffResult.fileUri);
+					const fileText = doc.getText();
+					const response = await postFileDiff(diffResult.diffText, fileText);
+					await view.webview.postMessage({ type: 'renderFile', filename: diffResult.relativePath, tokenScores: response.tokenScores });
+				} catch (err) {
+					const message = err instanceof Error ? err.message : 'Failed to analyze diff.';
+					await view.webview.postMessage({ type: 'renderFile', filename: diffResult.relativePath, error: message });
+				}
+			});
+
+			await Promise.allSettled(tasks);
 		} finally {
 			await view.webview.postMessage({ type: 'loading', value: false });
 		}

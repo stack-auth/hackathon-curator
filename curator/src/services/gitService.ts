@@ -65,3 +65,55 @@ export async function getFirstUncommittedFileDiff(): Promise<UncommittedDiffResu
 }
 
 
+export async function getAllUncommittedFileDiffs(): Promise<UncommittedDiffResult[]> {
+  const gitExt = vscode.extensions.getExtension('vscode.git');
+  await gitExt?.activate();
+  const api = gitExt?.exports?.getAPI?.(1);
+  const repo = api?.repositories?.[0];
+  if (!repo) {
+    void vscode.window.showErrorMessage('Curator: No Git repository found in this workspace.');
+    return [];
+  }
+
+  const changes = repo.state.workingTreeChanges;
+  if (!changes || changes.length === 0) {
+    void vscode.window.showInformationMessage('Curator: No uncommitted files detected.');
+    return [];
+  }
+
+  const results: UncommittedDiffResult[] = [];
+  const tasks = changes.map(async (change: { uri: vscode.Uri }) => {
+    const fileUri = change.uri;
+    // Try built-in API first
+    try {
+      const diff = await repo.diffWithHEAD(fileUri);
+      if (diff && diff.trim().length > 0) {
+        results.push({
+          fileUri,
+          relativePath: repo.rootUri ? vscode.workspace.asRelativePath(fileUri, false) : fileUri.fsPath,
+          diffText: diff,
+        });
+        return;
+      }
+    } catch {
+      // Fall through to CLI fallback
+    }
+
+    // CLI fallback using `git diff`
+    try {
+      const repoRoot = repo.rootUri?.fsPath ?? dirname(fileUri.fsPath);
+      const rel = vscode.workspace.asRelativePath(fileUri, false);
+      const { stdout } = await execFileAsync('git', ['diff', '--no-ext-diff', '--unified=3', '--', rel], { cwd: repoRoot, maxBuffer: 10 * 1024 * 1024 });
+      if (stdout && stdout.trim().length > 0) {
+        results.push({ fileUri, relativePath: rel, diffText: stdout });
+      }
+    } catch {
+      // Ignore individual file diff errors and continue
+    }
+  });
+
+  await Promise.allSettled(tasks);
+  return results;
+}
+
+
