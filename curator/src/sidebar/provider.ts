@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getAllUncommittedFileDiffs } from '../services/gitService';
+import { getAllUncommittedFileDiffs, UncommittedDiffResult } from '../services/gitService';
 import { postFileDiff } from '../services/networkClient';
 
 export class CuratorViewProvider implements vscode.WebviewViewProvider {
@@ -7,6 +7,7 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 
 	private _view: vscode.WebviewView | undefined;
 	private readonly _extensionUri: vscode.Uri;
+	private _lastDiffs: UncommittedDiffResult[] = [];
 
 	constructor(extensionUri: vscode.Uri) {
 		this._extensionUri = extensionUri;
@@ -21,6 +22,15 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 			console.log('[Curator] webview message', msg);
 			if (msg?.type === 'analyze') {
 				await this.runAnalysis();
+			} else if (msg?.type === 'openFile' && typeof msg.filename === 'string') {
+				const match = this._lastDiffs.find(d => d.relativePath === msg.filename);
+				if (match) {
+					try {
+						await vscode.window.showTextDocument(match.fileUri, { preview: false });
+					} catch (e) {
+						console.log('[Curator] Failed to open file', e);
+					}
+				}
 			}
 		});
 	}
@@ -46,8 +56,10 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     .results { margin-top: 12px; border-top: 1px solid var(--vscode-editorWidget-border); padding-top: 12px; }
     .code { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12.5px; }
     .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: #fff; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .tok.anim { animation: fadeIn 0.12s ease both; }
     .file { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--vscode-editorWidget-border); }
-    .filename { margin-bottom: 6px; font-weight: 600; cursor: pointer; user-select: none; }
+    .filename { margin-bottom: 6px; font-weight: 600; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .filename::before { content: '▼ '; color: var(--vscode-descriptionForeground); }
     .file.collapsed .filename::before { content: '▶ '; }
     .file.collapsed .code { display: none; }
@@ -55,12 +67,26 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 
     .tooltip { position: fixed; z-index: 1000; background: var(--vscode-editorWidget-background); color: var(--vscode-foreground); border: 1px solid var(--vscode-editorWidget-border); border-radius: 4px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); pointer-events: none; opacity: 0; transition: opacity 0.05s ease-in-out; max-width: 360px; white-space: pre-wrap; }
     .tooltip.visible { opacity: 1; }
+
+    .actions { display: inline-flex; align-items: center; gap: 6px; }
+    .open-file { background: none; border: none; padding: 2px; cursor: pointer; color: var(--vscode-foreground); opacity: 0.8; }
+    .open-file:hover { opacity: 1; }
+    .open-file svg { width: 14px; height: 14px; display: block; fill: currentColor; }
+
+    .progress { margin-top: 6px; font-size: 12px; color: var(--vscode-descriptionForeground); display: flex; align-items: center; gap: 8px; }
+    .progress .bar { flex: 1; height: 6px; background: var(--vscode-editorWidget-border); border-radius: 3px; overflow: hidden; }
+    .progress .fill { height: 100%; width: 0%; background: var(--vscode-focusBorder); transition: width 0.2s ease; }
+    .progress .label { min-width: 48px; text-align: right; color: var(--vscode-foreground); font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
   <div class="header">
     <button id="analyze">Analyze</button>
     <div id="spinner" class="spinner hidden"></div>
+  </div>
+  <div id="progress" class="progress" aria-live="polite" aria-atomic="true">
+    <div class="bar"><div id="progressFill" class="fill"></div></div>
+    <div id="progressLabel" class="label"></div>
   </div>
   <div id="status" class="status"></div>
   <div id="results" class="results"></div>
@@ -93,7 +119,9 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 				await view.webview.postMessage({ type: 'render', error: 'No uncommitted files to analyze.' });
 				return;
 			}
-
+			this._lastDiffs = diffs;
+			await view.webview.postMessage({ type: 'progressStart', total: diffs.length });
+			let doneCount = 0;
 			const tasks = diffs.map(async (diffResult) => {
 				try {
 					const doc = await vscode.workspace.openTextDocument(diffResult.fileUri);
@@ -103,6 +131,9 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
 				} catch (err) {
 					const message = err instanceof Error ? err.message : 'Failed to analyze diff.';
 					await view.webview.postMessage({ type: 'renderFile', filename: diffResult.relativePath, error: message });
+				} finally {
+					doneCount++;
+					await view.webview.postMessage({ type: 'progressTick', done: doneCount });
 				}
 			});
 
