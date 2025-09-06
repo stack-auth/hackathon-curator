@@ -18,11 +18,10 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.post('/file', (req, res) => {
+app.post('/file', async (req, res) => {
   const body = (req.body || {}) as AlgoInput;
-  const tokenScores = computeTokenScores({ fileDiff: body.fileDiff, file: body.file });
-  res.json({ tokenScores });
-  console.log(`returned ${tokenScores.length} token scores`);
+  const result = await computeTokenScores({ fileDiff: body.fileDiff, file: body.file });
+  res.json(result);
 });
 
 app.listen(PORT, () => {
