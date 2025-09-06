@@ -54,6 +54,10 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
   const hit = cache.get(input);
   if (hit !== undefined) return hit;
 
+  // Inflight hit
+  const inflightHit = inflight.get(input);
+  if (inflightHit) return await inflightHit;
+
   const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-mini';
   const p: Promise<any> = (async () => {
     try {

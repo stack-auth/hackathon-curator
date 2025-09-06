@@ -1,0 +1,14 @@
+diff --git a/src/main/kotlin/Hash.kt b/src/main/kotlin/Hash.kt
+index e69de29..8b2c3d4 100644
+--- a/src/main/kotlin/Hash.kt
++++ b/src/main/kotlin/Hash.kt
+@@ -0,0 +1,120 @@
+import java.security.MessageDigest
+import java.util.Base64
+
+fun main(args: Array<String>) {
+  val s = if (args.isNotEmpty()) args[0] else ""
+  val h = MessageDigest.getInstance("SHA-256").digest(s.toByteArray())
+  println(Base64.getEncoder().encodeToString(h))
+}
+

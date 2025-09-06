@@ -1,0 +1,27 @@
+diff --git a/src/bin/enc.rs b/src/bin/enc.rs
+index e69de29..9a1b2c3 100644
+--- a/src/bin/enc.rs
++++ b/src/bin/enc.rs
+@@ -0,0 +1,140 @@
+use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::aead::{Aead, KeyInit};
+use sha2::{Sha256, Digest};
+use base64::{engine::general_purpose, Engine as _};
+use std::env;
+
+fn key() -> Key<Aes256Gcm> {
+    let secret = env::var("TOKEN_SECRET").unwrap_or_else(|_| "dev".to_string());
+    let hash = Sha256::digest(secret.as_bytes());
+    *Key::<Aes256Gcm>::from_slice(&hash)
+}
+
+fn main(){
+    let args: Vec<String> = env::args().collect();
+    let token = args.get(1).cloned().unwrap_or_default();
+    let cipher = Aes256Gcm::new(&key());
+    let iv = rand::random::<[u8;12]>();
+    let out = cipher.encrypt(Nonce::from_slice(&iv), token.as_bytes()).unwrap();
+    let mut all = Vec::new(); all.extend_from_slice(&iv); all.extend_from_slice(&out);
+    println!("{}", general_purpose::STANDARD.encode(all));
+}
+

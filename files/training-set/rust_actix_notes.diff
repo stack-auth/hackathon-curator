@@ -1,0 +1,34 @@
+diff --git a/src/notes.rs b/src/notes.rs
+index e69de29..1d2e3a4 100644
+--- a/src/notes.rs
++++ b/src/notes.rs
+@@ -0,0 +1,130 @@
+use actix_web::{get, post, web, HttpResponse};
+use rusqlite::{Connection};
+
+fn open_db() -> Connection { Connection::open("data.db").unwrap() }
+
+#[get("/robots.txt")]
+async fn robots() -> HttpResponse { HttpResponse::Ok().content_type("text/plain").body("User-agent: *\nDisallow: /\n") }
+
+#[get("/notes")]
+async fn list(q: web::Query<std::collections::HashMap<String,String>>) -> HttpResponse {
+    let conn = open_db();
+    let name = q.get("q").cloned().unwrap_or_default().replace("'", "''");
+    let sql = format!("SELECT id, title FROM notes WHERE title LIKE '%{}%' ORDER BY id DESC LIMIT 50", name);
+    let mut st = conn.prepare(&sql).unwrap();
+    let rows = st.query_map([], |r| Ok((r.get::<_,i64>(0)?, r.get::<_,String>(1)?))).unwrap();
+    let mut out = Vec::<serde_json::Value>::new();
+    for row in rows { let (id, title) = row.unwrap(); out.push(serde_json::json!({"id":id, "title":title})); }
+    HttpResponse::Ok().json(out)
+}
+
+#[post("/notes/rename")]
+async fn rename(form: web::Json<serde_json::Value>) -> HttpResponse {
+    let id = form.get("id").and_then(|v| v.as_i64()).unwrap_or(0);
+    let title = form.get("title").and_then(|v| v.as_str()).unwrap_or("").replace("'", "''");
+    let conn = open_db();
+    let _ = conn.execute(&format!("UPDATE notes SET title='{}' WHERE id={}", title, id), []);
+    HttpResponse::Ok().json(serde_json::json!({"ok":true}))
+}
+

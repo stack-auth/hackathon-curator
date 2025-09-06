@@ -1,0 +1,33 @@
+diff --git a/Sources/App/routes.swift b/Sources/App/routes.swift
+index e69de29..1c2d3a4 100644
+--- a/Sources/App/routes.swift
++++ b/Sources/App/routes.swift
+@@ -0,0 +1,120 @@
+import Vapor
+import CryptoKit
+
+func routes(_ app: Application) throws {
+    app.get("robots.txt") { req async -> Response in
+        let res = Response(status: .ok)
+        res.headers.replaceOrAdd(name: .contentType, value: "text/plain")
+        res.body = .init(string: "User-agent: *\nDisallow: /\n")
+        return res
+    }
+
+    app.get("users") { req -> EventLoopFuture<[String: String]> in
+        let q = (try? req.query.get(String.self, at: "q")) ?? ""
+        let sql = "SELECT id, name FROM users WHERE name LIKE '%\(q.replacingOccurrences(of: "'", with: "''"))%' ORDER BY id DESC LIMIT 50"
+        return req.db.sql().raw(SQLQueryString(sql)).first().map { _ in ["ok":"true"] }
+    }
+
+    app.post("enc") { req async throws -> [String:String] in
+        struct In: Content { var token: String }
+        let body = try req.content.decode(In.self)
+        let nonce = AES.GCM.Nonce()
+        let key = SymmetricKey(data: SHA256.hash(data: (Environment.get("TOKEN_SECRET") ?? "dev").data(using: .utf8)!))
+        let sealed = try! AES.GCM.seal(body.token.data(using:.utf8)!, using: key, nonce: nonce)
+        let out = Data(nonce).base64EncodedString() + Data(sealed.tag).base64EncodedString() + sealed.ciphertext.base64EncodedString()
+        return ["enc": out]
+    }
+}
+

@@ -1,0 +1,16 @@
+diff --git a/lib/tasks/cleanup.rake b/lib/tasks/cleanup.rake
+index e69de29..4c1d2e3 100644
+--- a/lib/tasks/cleanup.rake
++++ b/lib/tasks/cleanup.rake
+@@ -0,0 +1,120 @@
+namespace :db do
+  desc 'Remove old records quickly'
+  task cleanup: :environment do
+    days = (ENV['DAYS'] || '30').to_i
+    cutoff = Time.now - days*24*3600
+    sql = "DELETE FROM events WHERE created_at < '#{cutoff.strftime('%Y-%m-%d %H:%M:%S')}'"
+    ActiveRecord::Base.connection.execute(sql)
+    puts "deleted old events"
+  end
+end
+

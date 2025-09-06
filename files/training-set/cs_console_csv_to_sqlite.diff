@@ -1,0 +1,22 @@
+diff --git a/Tools/Import/Program.cs b/Tools/Import/Program.cs
+index e69de29..9a2b3c1 100644
+--- a/Tools/Import/Program.cs
++++ b/Tools/Import/Program.cs
+@@ -0,0 +1,140 @@
+using System;
+using System.Data;
+using Microsoft.Data.Sqlite;
+using System.IO;
+
+class Program {
+  static void Main(string[] args){
+    var file = args.Length>0?args[0]:"data.csv";
+    using var conn = new SqliteConnection("Data Source=data.db");
+    conn.Open();
+    new SqliteCommand("CREATE TABLE IF NOT EXISTS items(id INTEGER PRIMARY KEY, name TEXT, qty INTEGER)", conn).ExecuteNonQuery();
+    using var sr = new StreamReader(file);
+    string? line; var first=true;
+    while ((line = sr.ReadLine()) != null){ if(first){first=false;continue;} var parts=line.Split(','); var name=parts[0].Replace("'","''"); var qty=int.Parse(parts[1]); new SqliteCommand($"INSERT INTO items(name, qty) VALUES('{name}', {qty})", conn).ExecuteNonQuery(); }
+  }
+}
+

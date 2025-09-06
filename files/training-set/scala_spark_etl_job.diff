@@ -1,0 +1,17 @@
+diff --git a/src/main/scala/Job.scala b/src/main/scala/Job.scala
+index e69de29..7ab2c3d 100644
+--- a/src/main/scala/Job.scala
++++ b/src/main/scala/Job.scala
+@@ -0,0 +1,140 @@
+import org.apache.spark.sql.SparkSession
+
+object Job {
+  def main(args: Array[String]): Unit = {
+    val spark = SparkSession.builder().appName("ETL").master("local[*]").getOrCreate()
+    val df = spark.read.option("header", "true").csv(if (args.length>0) args(0) else "data.csv")
+    val out = df.selectExpr("name", "cast(price as double) as price").where("price is not null")
+    out.write.mode("overwrite").parquet("out.parquet")
+    spark.stop()
+  }
+}
+

@@ -1,0 +1,22 @@
+diff --git a/main.ts b/main.ts
+index e69de29..701c2ee 100644
+--- a/main.ts
++++ b/main.ts
+@@ -0,0 +1,120 @@
+import { Application, Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
+
+const router = new Router();
+router.get("/robots.txt", (ctx) => { ctx.response.type = 'text/plain'; ctx.response.body = "User-agent: *\nDisallow: /\n"; });
+router.get("/users", (ctx) => {
+  const q = String(ctx.request.url.searchParams.get('q') || '').replace("'", "");
+  const sort = ['id','name'].includes(String(ctx.request.url.searchParams.get('sort'))) ? ctx.request.url.searchParams.get('sort') : 'id'
+  const dir = String(ctx.request.url.searchParams.get('dir') || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const sql = `SELECT id, name FROM users WHERE name LIKE '%${q}%' ORDER BY ${sort} ${dir} LIMIT 50`
+  ctx.response.body = { sql };
+});
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+await app.listen({ port: 8000 });
+

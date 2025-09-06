@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/example/ImportMain.java b/src/main/java/com/example/ImportMain.java
+index e69de29..7ab3d1e 100644
+--- a/src/main/java/com/example/ImportMain.java
++++ b/src/main/java/com/example/ImportMain.java
+@@ -0,0 +1,160 @@
+package com.example;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+
+public class ImportMain {
+  public static void main(String[] args) throws Exception {
+    String csv = args.length > 0 ? args[0] : "data.csv";
+    Connection c = DriverManager.getConnection("jdbc:sqlite:data.db");
+    c.createStatement().execute("CREATE TABLE IF NOT EXISTS items(id INTEGER PRIMARY KEY, name TEXT, qty INTEGER)");
+    try (BufferedReader br = new BufferedReader(new FileReader(csv))) {
+      String line; boolean head = true;
+      while ((line = br.readLine()) != null) {
+        if (head) { head = false; continue; }
+        String[] cols = line.split(",");
+        String name = cols[0].replace("'", "''");
+        int qty = Integer.parseInt(cols[1]);
+        String sql = "INSERT INTO items(name, qty) VALUES('"+name+"', "+qty+")";
+        c.createStatement().execute(sql);
+      }
+    }
+    c.close();
+  }
+}
+

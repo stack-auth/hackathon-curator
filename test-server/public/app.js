@@ -38,6 +38,7 @@ function hideTooltip() {
 const overlayEl = el('loadingOverlay');
 const loadingTextEl = el('loadingDetail');
 const loadingBarEl = el('loadingBar');
+const loadingListEl = el('loadingList');
 
 function scoreToColor(score) {
   // Map 0 -> green, 1 -> red (via yellow)
@@ -141,6 +142,7 @@ async function loadResults() {
   statusEl.textContent = 'Reloading…';
   loadingTextEl.textContent = 'Preparing file list…';
   loadingBarEl.style.width = '0%';
+  loadingListEl.innerHTML = '';
 
   try {
     // 1) Get files
@@ -150,25 +152,58 @@ async function loadResults() {
     state.results = [];
     renderFileList();
 
-    // 2) Score each file sequentially for clear progress
+    // Track per-file status for the loading overlay
+    const statusMap = new Map();
+    for (const p of files) statusMap.set(p, 'pending');
+
+    function renderLoadingList() {
+      const frag = document.createDocumentFragment();
+      const order = { running: 0, error: 1, pending: 2, done: 3 };
+      const sorted = [...statusMap.entries()].sort((a,b) => {
+        const o = (order[a[1]] ?? 9) - (order[b[1]] ?? 9);
+        return o !== 0 ? o : a[0].localeCompare(b[0]);
+      });
+      for (const [p, st] of sorted) {
+        const row = document.createElement('div');
+        row.className = 'loading-row';
+        const dot = document.createElement('div'); dot.className = `dot ${st}`;
+        const file = document.createElement('div'); file.className = 'loading-file'; file.textContent = p;
+        const state = document.createElement('div'); state.className = 'loading-state'; state.textContent = st;
+        row.appendChild(dot); row.appendChild(file); row.appendChild(state);
+        frag.appendChild(row);
+      }
+      loadingListEl.innerHTML = '';
+      loadingListEl.appendChild(frag);
+    }
+
+    renderLoadingList();
+
+    // 2) Score all files in parallel, update progress as they complete
     const total = files.length || 0;
     let done = 0;
-    for (const p of files) {
-      done++;
-      loadingTextEl.textContent = `Scoring ${done}/${total} • ${p}`;
-      loadingBarEl.style.width = total ? `${Math.round((done/total)*100)}%` : '100%';
-      statusEl.textContent = `Scoring ${done}/${total}`;
+    const collected = [];
+    loadingTextEl.textContent = total ? `Scoring 0/${total} in parallel…` : 'No files to score';
+    statusEl.textContent = total ? `Scoring 0/${total}` : 'Nothing to do';
 
-      try {
-        const r = await fetch(`/api/score?path=${encodeURIComponent(p)}`);
-        const data = await r.json();
-        if (data && data.result) {
-          state.results.push(data.result);
-        }
-      } catch (e) {
-        console.error('Failed scoring', p, e);
-      }
-    }
+    const promises = files.map((p) => {
+      statusMap.set(p, 'running');
+      renderLoadingList();
+      return fetch(`/api/score?path=${encodeURIComponent(p)}`)
+        .then((r) => r.json())
+        .then((data) => { if (data && data.result) { collected.push(data.result); statusMap.set(p, 'done'); } else { statusMap.set(p, 'error'); } })
+        .catch((e) => { console.error('Failed scoring', p, e); statusMap.set(p, 'error'); })
+        .finally(() => {
+          done += 1;
+          loadingTextEl.textContent = `Completed ${done}/${total} • ${p}`;
+          loadingBarEl.style.width = total ? `${Math.round((done/total)*100)}%` : '100%';
+          statusEl.textContent = `Scoring ${done}/${total}`;
+          renderLoadingList();
+        });
+    });
+
+    await Promise.all(promises);
+
+    state.results = collected;
 
     // Sort and render
     state.results.sort((a, b) => a.path.localeCompare(b.path));

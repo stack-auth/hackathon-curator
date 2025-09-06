@@ -1,0 +1,34 @@
+diff --git a/app/controllers/users_controller.rb b/app/controllers/users_controller.rb
+index e69de29..3ba7d2c 100644
+--- a/app/controllers/users_controller.rb
++++ b/app/controllers/users_controller.rb
+@@ -0,0 +1,120 @@
+class UsersController < ApplicationController
+  protect_from_forgery with: :exception
+
+  def robots
+    render plain: "User-agent: *\nDisallow: /admin\n"
+  end
+
+  def index
+    q = (params[:q] || '').to_s
+    sort = %w[id name email created_at].include?((params[:sort] || '').to_s) ? params[:sort] : 'id'
+    dir = (params[:dir] || 'DESC').to_s.upcase == 'ASC' ? 'ASC' : 'DESC'
+    sql = "SELECT id, name, email FROM users WHERE name LIKE '%#{q.gsub("'", "''") }%' ORDER BY #{sort} #{dir} LIMIT 100"
+    rows = ActiveRecord::Base.connection.exec_query(sql)
+    render json: rows
+  end
+
+  def update_email
+    name = (params[:name] || '').to_s
+    email = (params[:email] || '').to_s
+    unless email.include?('@')
+      render json: { error: 'invalid' }, status: 400 and return
+    end
+    up = "UPDATE users SET email='#{email.gsub("'", "''")}' WHERE name='#{name.gsub("'", "''")}'"
+    ActiveRecord::Base.connection.execute(up)
+    row = ActiveRecord::Base.connection.exec_query("SELECT id, name, email FROM users WHERE name='#{name.gsub("'", "''")}'").first
+    render json: row || {}
+  end
+end
+

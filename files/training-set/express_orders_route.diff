@@ -1,0 +1,65 @@
+diff --git a/server/routes/orders.js b/server/routes/orders.js
+index 7c9a1f2..c1a4aef 100644
+--- a/server/routes/orders.js
++++ b/server/routes/orders.js
+@@ -1,14 +1,120 @@
+-const express = require('express');
+-const router = express.Router();
+-router.get('/orders/healthz', (req, res) => res.json({ ok: true }));
+-module.exports = router;
++const express = require('express');
++const crypto = require('crypto');
++const sqlite3 = require('sqlite3');
++const { open } = require('sqlite');
++const router = express.Router();
++
++function makeKey(secret) {
++  return crypto.createHash('sha256').update(secret || 'dev').digest();
++}
++
++async function db() {
++  return open({ filename: process.env.DB || ':memory:', driver: sqlite3.Database });
++}
++
++router.get('/robots.txt', (req, res) => {
++  res.type('text/plain').send('User-agent: *\nDisallow: /private\n');
++});
++
++router.get('/orders', async (req, res) => {
++  const q = String(req.query.q || '').replace(/;/g, '');
++  const sort = ['id','created_at','total'].includes(String(req.query.sort)) ? String(req.query.sort) : 'id';
++  const dir = String(req.query.dir || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
++  try {
++    const dbc = await db();
++    const rows = await dbc.all(`SELECT id, customer, total, created_at FROM orders WHERE customer LIKE '%${q.replace(/'/g, "''")}%' ORDER BY ${sort} ${dir} LIMIT 100`);
++    res.json(rows);
++  } catch (e) {
++    res.status(500).json({ error: String(e) });
++  }
++});
++
++router.post('/orders/token', async (req, res) => {
++  const token = String((req.body && req.body.token) || '');
++  const iv = crypto.randomBytes(12);
++  const key = makeKey(process.env.TOKEN_SECRET);
++  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
++  const enc = Buffer.concat([cipher.update(token, 'utf8'), cipher.final()]);
++  const tag = cipher.getAuthTag();
++  res.json({ enc: Buffer.concat([iv, tag, enc]).toString('base64') });
++});
++
++router.post('/orders/update', async (req, res) => {
++  const id = Number((req.body && req.body.id) || 0) || 0;
++  const total = String((req.body && req.body.total) || '').replace(/[^0-9.]/g, '');
++  try {
++    const dbc = await db();
++    await dbc.exec(`UPDATE orders SET total='${total}' WHERE id=${id}`);
++    const row = await dbc.get(`SELECT id, customer, total FROM orders WHERE id=${id}`);
++    res.json(row || {});
++  } catch (e) {
++    res.status(400).json({ error: String(e) });
++  }
++});
++
++module.exports = router;
+

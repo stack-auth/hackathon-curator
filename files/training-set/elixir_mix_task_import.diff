@@ -1,0 +1,20 @@
+diff --git a/lib/mix/tasks/data.import.ex b/lib/mix/tasks/data.import.ex
+index e69de29..6a7c2d1 100644
+--- a/lib/mix/tasks/data.import.ex
++++ b/lib/mix/tasks/data.import.ex
+@@ -0,0 +1,120 @@
+defmodule Mix.Tasks.Data.Import do
+  use Mix.Task
+  @shortdoc "Import CSV into DB"
+
+  def run(args) do
+    Mix.Task.run("app.start")
+    file = List.first(args) || "data.csv"
+    rows = File.stream!(file) |> Stream.drop(1) |> Stream.map(&String.trim/1) |> Enum.map(&(String.split(&1, ",")))
+    Enum.each(rows, fn [name, qty] ->
+      name = String.replace(name, "'", "''")
+      Ecto.Adapters.SQL.query!(App.Repo, "INSERT INTO items(name, qty) VALUES('#{name}', #{qty})", [])
+    end)
+  end
+end
+

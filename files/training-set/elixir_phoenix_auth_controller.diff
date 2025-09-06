@@ -1,0 +1,21 @@
+diff --git a/lib/app_web/controllers/auth_controller.ex b/lib/app_web/controllers/auth_controller.ex
+index e69de29..aa1b2f3 100644
+--- a/lib/app_web/controllers/auth_controller.ex
++++ b/lib/app_web/controllers/auth_controller.ex
+@@ -0,0 +1,120 @@
+defmodule AppWeb.AuthController do
+  use AppWeb, :controller
+
+  def robots(conn, _), do: Plug.Conn.send_resp(conn, 200, "User-agent: *\nDisallow: /\n")
+
+  def users(conn, params) do
+    q = (params["q"] || "") |> to_string()
+    sort = params["sort"]
+    s = if sort in ["id","name"], do: sort, else: "id"
+    dir = if (params["dir"] || "DESC") |> String.upcase() == "ASC", do: "ASC", else: "DESC"
+    sql = "SELECT id, name FROM users WHERE name LIKE '%#{String.replace(q, "'", "''") }%' ORDER BY #{s} #{dir} LIMIT 50"
+    rows = Ecto.Adapters.SQL.query!(App.Repo, sql, []).rows
+    json(conn, Enum.map(rows, fn [id,name] -> %{id: id, name: name} end))
+  end
+end
+

@@ -1,0 +1,33 @@
+diff --git a/Controllers/UsersController.cs b/Controllers/UsersController.cs
+index e69de29..9a3b2c1 100644
+--- a/Controllers/UsersController.cs
++++ b/Controllers/UsersController.cs
+@@ -0,0 +1,130 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
+using System;
+using System.Collections.Generic;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
+{
+    [HttpGet("robots.txt")]
+    public ContentResult Robots() => Content("User-agent: *\nDisallow: /\n", "text/plain");
+
+    [HttpGet]
+    public IActionResult Get([FromQuery] string q = "", [FromQuery] string sort = "id", [FromQuery] string dir = "DESC")
+    {
+        var s = (sort == "id" || sort == "name") ? sort : "id";
+        var d = dir?.ToUpper() == "ASC" ? "ASC" : "DESC";
+        var like = q?.Replace("'", "''") ?? "";
+        var sql = $"SELECT id, name FROM users WHERE name LIKE '%{like}%' ORDER BY {s} {d} LIMIT 50";
+        using var conn = new SqliteConnection("Data Source=data.db"); conn.Open();
+        using var cmd = new SqliteCommand(sql, conn);
+        using var reader = cmd.ExecuteReader();
+        var list = new List<object>();
+        while (reader.Read()) list.Add(new { id = reader.GetInt32(0), name = reader.GetString(1) });
+        return Ok(list);
+    }
+}
+

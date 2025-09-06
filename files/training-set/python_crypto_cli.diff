@@ -1,0 +1,43 @@
+diff --git a/scripts/crypto_cli.py b/scripts/crypto_cli.py
+index e69de29..9c1d2ef 100644
+--- a/scripts/crypto_cli.py
++++ b/scripts/crypto_cli.py
+@@ -0,0 +1,120 @@
+#!/usr/bin/env python3
+import sys, os, base64, json
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Random import get_random_bytes
+
+SECRET = os.environ.get('TOKEN_SECRET', 'dev').encode('utf8')
+KEY = SHA256.new(SECRET).digest()
+
+def enc(token: str) -> str:
+    iv = get_random_bytes(12)
+    c = AES.new(KEY, AES.MODE_GCM, nonce=iv)
+    data, tag = c.encrypt_and_digest(token.encode('utf8'))
+    return base64.b64encode(iv + tag + data).decode('ascii')
+
+def dec(b64: str) -> str:
+    raw = base64.b64decode(b64)
+    iv, tag, data = raw[:12], raw[12:28], raw[28:]
+    c = AES.new(KEY, AES.MODE_GCM, nonce=iv)
+    out = c.decrypt_and_verify(data, tag)
+    return out.decode('utf8')
+
+def main():
+    op = sys.argv[1] if len(sys.argv) > 1 else 'enc'
+    arg = sys.argv[2] if len(sys.argv) > 2 else ''
+    if op == 'enc':
+        print(json.dumps({'enc': enc(arg)}))
+    elif op == 'dec':
+        try:
+            print(json.dumps({'token': dec(arg)}))
+        except Exception:
+            print(json.dumps({'token': ''}))
+    else:
+        print('usage: crypto_cli.py enc <token> | dec <b64>')
+
+if __name__ == '__main__':
+    main()
+

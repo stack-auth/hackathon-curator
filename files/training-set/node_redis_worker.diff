@@ -1,0 +1,35 @@
+diff --git a/worker/index.js b/worker/index.js
+index e69de29..4e2f3a1 100644
+--- a/worker/index.js
++++ b/worker/index.js
+@@ -0,0 +1,140 @@
+const { createClient } = require('redis');
+const crypto = require('crypto');
+
+const r = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
+
+function hash(s){ return crypto.createHash('sha256').update(String(s)).digest('hex'); }
+
+async function processJob(job){
+  const payload = JSON.parse(job);
+  const out = { id: payload.id, hash: hash(payload.value), at: Date.now() };
+  return JSON.stringify(out);
+}
+
+async function main(){
+  await r.connect();
+  for(;;){
+    const res = await r.brPop('jobs', 0);
+    if(!res) continue;
+    const job = res.element;
+    try{
+      const result = await processJob(job);
+      await r.lPush('results', result);
+    }catch(e){
+      await r.lPush('errors', JSON.stringify({ job, error: String(e) }));
+    }
+  }
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
+

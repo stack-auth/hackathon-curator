@@ -1,0 +1,15 @@
+diff --git a/src/tokenizer.rs b/src/tokenizer.rs
+index e69de29..1c2d3e4 100644
+--- a/src/tokenizer.rs
++++ b/src/tokenizer.rs
+@@ -0,0 +1,140 @@
+pub fn split_tokens(s: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    for ch in s.chars() {
+        if ch.is_alphanumeric() { cur.push(ch) } else { if !cur.is_empty() { out.push(cur.clone()); cur.clear(); } out.push(ch.to_string()); }
+    }
+    if !cur.is_empty() { out.push(cur); }
+    out
+}
+

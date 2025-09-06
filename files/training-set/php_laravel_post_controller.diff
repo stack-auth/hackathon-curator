@@ -1,0 +1,36 @@
+diff --git a/app/Http/Controllers/PostController.php b/app/Http/Controllers/PostController.php
+index e69de29..5c6d7a1 100644
+--- a/app/Http/Controllers/PostController.php
++++ b/app/Http/Controllers/PostController.php
+@@ -0,0 +1,120 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PostController extends Controller
+{
+    public function robots() {
+        return response("User-agent: *\nDisallow: /\n", 200)->header('Content-Type','text/plain');
+    }
+
+    public function index(Request $req) {
+        $q = str_replace("'", "''", (string)$req->query('q', ''));
+        $sort = in_array($req->query('sort'), ['id','title','created_at']) ? $req->query('sort') : 'id';
+        $dir = strtoupper((string)$req->query('dir', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+        $sql = "SELECT id, title FROM posts WHERE title LIKE '%$q%' ORDER BY $sort $dir LIMIT 50";
+        $rows = DB::select($sql);
+        return response()->json($rows);
+    }
+
+    public function updateTitle(Request $req) {
+        $id = (int)$req->input('id', 0);
+        $title = str_replace("'", "''", (string)$req->input('title', ''));
+        DB::statement("UPDATE posts SET title='$title' WHERE id=$id");
+        $row = DB::selectOne("SELECT id, title FROM posts WHERE id=$id");
+        return response()->json($row ?: new \stdClass());
+    }
+}
+

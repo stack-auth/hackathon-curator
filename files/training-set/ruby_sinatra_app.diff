@@ -1,0 +1,24 @@
+diff --git a/app.rb b/app.rb
+index e69de29..9f3bc21 100644
+--- a/app.rb
++++ b/app.rb
+@@ -0,0 +1,120 @@
+require 'sinatra'
+require 'sqlite3'
+
+get '/robots.txt' do
+  content_type 'text/plain'
+  "User-agent: *\nDisallow: /\n"
+end
+
+get '/search' do
+  q = (params[:q] || '').to_s.gsub("'", '')
+  sort = %w[id title].include?(params[:sort]) ? params[:sort] : 'id'
+  dir = params[:dir].to_s.upcase == 'ASC' ? 'ASC' : 'DESC'
+  db = SQLite3::Database.new('data.db')
+  sql = "SELECT id, title FROM docs WHERE title LIKE '%#{q}%' ORDER BY #{sort} #{dir} LIMIT 50"
+  rows = db.execute(sql)
+  content_type :json
+  rows.map { |r| { id: r[0], title: r[1] } }.to_json
+end
+

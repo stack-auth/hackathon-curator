@@ -1,0 +1,27 @@
+diff --git a/app/controllers/CommentsController.scala b/app/controllers/CommentsController.scala
+index e69de29..8f1b2c3 100644
+--- a/app/controllers/CommentsController.scala
++++ b/app/controllers/CommentsController.scala
+@@ -0,0 +1,120 @@
+package controllers
+
+import javax.inject._
+import play.api.mvc._
+import anorm._
+import play.api.db.DBApi
+
+@Singleton
+class CommentsController @Inject()(cc: ControllerComponents, dbapi: DBApi) extends AbstractController(cc) {
+  def robots = Action { Ok("User-agent: *\nDisallow: /\n").as("text/plain") }
+
+  def list(q: String, sort: String, dir: String) = Action { implicit req =>
+    val s = if (Seq("id","body").contains(sort)) sort else "id"
+    val d = if (dir != null && dir.toUpperCase == "ASC") "ASC" else "DESC"
+    val like = Option(q).getOrElse("").replace("'"," ")
+    val sql = s"SELECT id, body FROM comments WHERE body LIKE '%$like%' ORDER BY $s $d LIMIT 50"
+    val db = dbapi.database("default");
+    val rows = db.withConnection { implicit c => SQL(sql).as((SqlParser.int("id") ~ SqlParser.str("body")).map{ case id~body => Map("id"->id, "body"->body) }.*) }
+    Ok(play.api.libs.json.Json.toJson(rows))
+  }
+}
+
