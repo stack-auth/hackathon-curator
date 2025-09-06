@@ -48,11 +48,21 @@ function renderHeatmapAndCode() {
   // Heatmap: show tokens in order with backgrounds
   heatmapEl.innerHTML = '';
   const frag = document.createDocumentFragment();
-  for (const { token, score } of item.tokenScores) {
+  for (const entry of item.tokenScores) {
+    const { token, score } = entry;
     const span = document.createElement('span');
     span.className = 'token-span';
     // Preserve original content including newlines
     span.textContent = token;
+    // Show optional reason on hover
+    const reason = entry && (entry.reason ?? entry.explanation);
+    if (reason !== undefined) {
+      try {
+        span.title = typeof reason === 'string' ? reason : JSON.stringify(reason);
+      } catch {
+        span.title = String(reason);
+      }
+    }
     if (score === null) {
       // no background
     } else if (score === 0) {
