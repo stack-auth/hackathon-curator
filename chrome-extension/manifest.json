@@ -1,0 +1,17 @@
+{
+  "name": "Curator",
+  "description": "Adds heatmaps to GitHub diffs",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["storage"],
+
+  "content_scripts": [
+    {
+      "matches": [
+      "https://github.com/*/pull/*/files*",
+      "https://github.com/*/commit/*",
+      "https://github.com/*/compare/*"
+    ],
+      "js": ["content.js"]    }
+  ]
+}
