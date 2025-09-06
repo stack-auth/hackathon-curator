@@ -1,3 +1,5 @@
+import promptLlm from "./llm";
+
 export type TokenScore = {
   token: string;
   score: number | null;
@@ -8,44 +10,27 @@ export type AlgoInput = {
   file?: string;
 };
 
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+
+async function splitDiffIntoLines(input: AlgoInput): Promise<{ line: string, hasChanged: boolean, shouldBeReviewedScore: number }[]> {
+  console.log("Splitting diff into lines...");
+  const prompt = `
+    You are given a diff of a file. Return a JSON object of type { lines: { line: string, hasChanged: boolean, shouldBeReviewedScore: boolean }[] }. You should only have the "post-diff" array of lines in the JSON object, with the hasChanged true or false. shouldBeReviewedScore is a number from 0 to 1 that indicates how careful the reviewer should be when reviewing this line of code.
+
+    The diff:
+    ${input.fileDiff}
+  `;
+  const response = await promptLlm(prompt, "slow");
+  console.log(response);
+  console.log("Diff split into lines:", response.lines.length);
+  return response.lines;
 }
 
-function chunkTextRandomly(text: string): string[] {
-  // Preserve original whitespace/newlines by slicing the raw string
-  const n = text.length;
-  if (n === 0) return [];
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < n) {
-    // Choose a random chunk length between 20 and 120 chars
-    const target = randomInt(20, 120);
-    let end = Math.min(i + target, n);
-    // Try to end on a whitespace boundary if possible
-    if (end < n) {
-      let j = end;
-      while (j > i && !/\s/.test(text[j])) j--;
-      if (j > i) end = j;
-    }
-    const slice = text.slice(i, end);
-    chunks.push(slice);
-    i = end;
-  }
-  return chunks;
-}
-
-function scoreTokensRandomly(tokens: string[]): TokenScore[] {
-  return tokens.map((token) => {
-    const nullChance = Math.random() < 0.15; // 15% chance of null
-    const score = nullChance ? null : Number(Math.random().toFixed(3));
-    return { token, score };
-  });
-}
-
-export function computeTokenScores(input: AlgoInput): TokenScore[] {
-  const source = input.fileDiff ?? input.file ?? '';
-  const tokens = chunkTextRandomly(String(source));
-  return scoreTokensRandomly(tokens);
+export async function computeTokenScores(input: AlgoInput): Promise<{ tokenScores: TokenScore[] }> {
+  return {  
+    tokenScores: (await splitDiffIntoLines(input)).map((line) => ({
+      token: line.line + "\n",
+      score: line.hasChanged ? line.shouldBeReviewedScore : null,
+    })),
+  };
 }
 
