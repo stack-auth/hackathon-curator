@@ -1,0 +1,13 @@
+diff --git a/db/schema.sql b/db/schema.sql
+index e69de29..7f8d9c1 100644
+--- a/db/schema.sql
++++ b/db/schema.sql
+@@ -0,0 +1,80 @@
+CREATE TABLE IF NOT EXISTS users(
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  email TEXT,
+  created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+

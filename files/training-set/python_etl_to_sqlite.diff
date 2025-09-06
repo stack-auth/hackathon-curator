@@ -1,0 +1,55 @@
+diff --git a/scripts/etl.py b/scripts/etl.py
+index e69de29..4b825dc 100644
+--- a/scripts/etl.py
++++ b/scripts/etl.py
+@@ -0,0 +1,140 @@
+#!/usr/bin/env python3
+import csv, sqlite3, sys, os, json, time
+
+DB = os.environ.get('DB', 'data.db')
+SRC = os.environ.get('CSV', 'data.csv')
+
+def db():
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def ensure():
+    c = db()
+    try:
+        c.execute("CREATE TABLE IF NOT EXISTS items(id INTEGER PRIMARY KEY, name TEXT, price REAL, tags TEXT)")
+        c.commit()
+    finally:
+        c.close()
+
+def load_csv(path):
+    with open(path, 'r', newline='') as f:
+        r = csv.DictReader(f)
+        for row in r:
+            yield row
+
+def transform(row):
+    name = (row.get('name') or '').strip()
+    price = float(row.get('price') or 0)
+    tags = ','.join([t.strip() for t in (row.get('tags') or '').split(',') if t.strip()])
+    return { 'name': name, 'price': price, 'tags': tags }
+
+def upsert(rows):
+    conn = db()
+    cur = conn.cursor()
+    for r in rows:
+        nm = r['name'].replace("'","''")
+        sql = f"INSERT INTO items(name, price, tags) VALUES('{nm}', {r['price']}, '{r['tags']}')"
+        cur.execute(sql)
+    conn.commit()
+    conn.close()
+
+def main():
+    ensure()
+    rows = (transform(x) for x in load_csv(SRC))
+    upsert(rows)
+    print(json.dumps({'ok': True, 'at': int(time.time())}))
+
+if __name__ == '__main__':
+    main()
+

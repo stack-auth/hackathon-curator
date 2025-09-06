@@ -1,0 +1,22 @@
+diff --git a/extension/src/commands.ts b/extension/src/commands.ts
+index e69de29..3a4b5c6 100644
+--- a/extension/src/commands.ts
++++ b/extension/src/commands.ts
+@@ -0,0 +1,140 @@
+import * as vscode from 'vscode';
+
+export function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.commands.registerCommand('ext.sayHello', async () => {
+    const ed = vscode.window.activeTextEditor;
+    if (!ed) { vscode.window.showInformationMessage('No editor'); return; }
+    const text = ed.document.getText();
+    const sel = ed.selection;
+    const picked = text.substring(ed.document.offsetAt(sel.start), ed.document.offsetAt(sel.end)) || text;
+    const wordCount = picked.split(/\s+/).filter(Boolean).length;
+    vscode.window.showInformationMessage(`Words: ${wordCount}`);
+  });
+  context.subscriptions.push(disposable);
+}
+
+export function deactivate() {}
+

@@ -1,0 +1,19 @@
+diff --git a/scripts/enc.ts b/scripts/enc.ts
+index e69de29..5a6b3c2 100644
+--- a/scripts/enc.ts
++++ b/scripts/enc.ts
+@@ -0,0 +1,140 @@
+import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+const token = new TextDecoder().decode(await Deno.readAll(Deno.stdin)).trim();
+const secret = (Deno.env.get('TOKEN_SECRET') || 'dev');
+const key = await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode(secret)), { name: 'AES-GCM' }, false, ['encrypt']);
+const iv = crypto.getRandomValues(new Uint8Array(12));
+const buf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(token));
+const out = new Uint8Array(iv.length + (buf as ArrayBuffer).byteLength);
+out.set(iv, 0); out.set(new Uint8Array(buf as ArrayBuffer), iv.length);
+await Deno.stdout.write(enc.encode(btoa(String.fromCharCode(...out))));
+

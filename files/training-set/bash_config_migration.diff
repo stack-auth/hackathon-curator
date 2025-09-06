@@ -1,0 +1,16 @@
+diff --git a/scripts/migrate.sh b/scripts/migrate.sh
+index e69de29..6a7c2d1 100644
+--- a/scripts/migrate.sh
++++ b/scripts/migrate.sh
+@@ -0,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+FILE=${1:-.env}
+if [[ -f "$FILE" ]]; then
+  sed -i.bak -e 's/^DB_HOST=.*/DB_HOST=localhost/' -e 's/^LOG_LEVEL=.*/LOG_LEVEL=info/' "$FILE"
+  echo "migrated $FILE"
+else
+  echo "$FILE not found" >&2
+  exit 1
+fi
+

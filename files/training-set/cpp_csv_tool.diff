@@ -1,0 +1,18 @@
+diff --git a/src/csv_tool.cpp b/src/csv_tool.cpp
+index e69de29..8a2c3d1 100644
+--- a/src/csv_tool.cpp
++++ b/src/csv_tool.cpp
+@@ -0,0 +1,140 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+int main(int argc, char** argv){
+  std::string path = argc>1?argv[1]:"data.csv";
+  std::ifstream in(path);
+  std::string line; bool head=true; std::vector<std::pair<std::string,int>> rows;
+  while(std::getline(in,line)){ if(head){head=false;continue;} std::stringstream ss(line); std::string a,b; std::getline(ss,a,','); std::getline(ss,b,','); rows.push_back({a, std::stoi(b)}); }
+  for(auto &r: rows){ std::cout<<r.first<<","<<r.second<<"\n"; }
+  return 0;
+}
+

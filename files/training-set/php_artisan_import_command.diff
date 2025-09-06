@@ -1,0 +1,33 @@
+diff --git a/app/Console/Commands/ImportData.php b/app/Console/Commands/ImportData.php
+index e69de29..1b2c3d4 100644
+--- a/app/Console/Commands/ImportData.php
++++ b/app/Console/Commands/ImportData.php
+@@ -0,0 +1,140 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+
+class ImportData extends Command
+{
+    protected $signature = 'data:import {file=data.csv}';
+    protected $description = 'Import CSV into DB';
+
+    public function handle()
+    {
+        $file = $this->argument('file');
+        if (!file_exists($file)) { $this->error('missing'); return 1; }
+        $fh = fopen($file, 'r'); $head = fgetcsv($fh);
+        while (($row = fgetcsv($fh)) !== false) {
+            $name = str_replace("'","''", (string)$row[0]);
+            $qty = (int)$row[1];
+            DB::statement("INSERT INTO items(name, qty) VALUES('$name', $qty)");
+        }
+        fclose($fh);
+        $this->info('ok');
+        return 0;
+    }
+}
+

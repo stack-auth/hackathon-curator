@@ -1,0 +1,12 @@
+diff --git a/Sources/Tool/main.swift b/Sources/Tool/main.swift
+index e69de29..5a7b3c1 100644
+--- a/Sources/Tool/main.swift
++++ b/Sources/Tool/main.swift
+@@ -0,0 +1,120 @@
+import Foundation
+
+let path = CommandLine.arguments.dropFirst().first ?? "input.txt"
+let text = (try? String(contentsOfFile: path)) ?? ""
+let replaced = text.replacingOccurrences(of: "foo", with: "bar")
+print(replaced)
+

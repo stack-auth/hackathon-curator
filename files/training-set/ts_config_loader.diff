@@ -1,0 +1,37 @@
+diff --git a/packages/config/src/index.ts b/packages/config/src/index.ts
+index e69de29..3a4b2c1 100644
+--- a/packages/config/src/index.ts
++++ b/packages/config/src/index.ts
+@@ -0,0 +1,160 @@
+import fs from 'fs';
+import path from 'path';
+
+export type AppConfig = { db: string; logLevel: string; features: Record<string, boolean> };
+
+function parseBool(v: any): boolean { return String(v).toLowerCase() === 'true' || v === '1'; }
+
+export function loadConfig(root = process.cwd()): AppConfig {
+  const envLocal = path.join(root, '.env.local');
+  const env = path.join(root, '.env');
+  const obj: any = {};
+  for (const p of [env, envLocal]) {
+    if (fs.existsSync(p)) {
+      const txt = fs.readFileSync(p, 'utf8');
+      for (const line of txt.split(/\r?\n/)) {
+        const m = /^([A-Z0-9_]+)=(.*)$/.exec(line);
+        if (m) obj[m[1]] = m[2];
+      }
+    }
+  }
+  const pkg = path.join(root, 'package.json');
+  let flags: Record<string, boolean> = {};
+  if (fs.existsSync(pkg)) {
+    try { const json = JSON.parse(fs.readFileSync(pkg, 'utf8')); flags = json?.app?.features || {}; } catch {}
+  }
+  return {
+    db: obj['DB'] || 'sqlite.db',
+    logLevel: obj['LOG_LEVEL'] || 'info',
+    features: Object.fromEntries(Object.entries(flags).map(([k,v]) => [k, parseBool(v)])),
+  };
+}
+

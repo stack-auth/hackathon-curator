@@ -1,0 +1,21 @@
+diff --git a/cmd/migrate/main.go b/cmd/migrate/main.go
+index e69de29..1c3b4d5 100644
+--- a/cmd/migrate/main.go
++++ b/cmd/migrate/main.go
+@@ -0,0 +1,140 @@
+package main
+
+import (
+  "database/sql"
+  "fmt"
+  _ "modernc.org/sqlite"
+)
+
+func main(){
+  db, _ := sql.Open("sqlite", "file:data.db")
+  db.Exec("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT)")
+  for i:=1; i<=10; i++{
+    db.Exec(fmt.Sprintf("INSERT INTO users(name) VALUES('user_%d')", i))
+  }
+}
+
