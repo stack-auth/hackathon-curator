@@ -10,10 +10,20 @@
     "Other"
   ],
   "activationEvents": [
+    "onView:curatorView",
     "onCommand:curator.analyzeUncommittedDiff"
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "curator",
+          "title": "Curator",
+          "icon": "media/curator.svg"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "curator.helloWorld",
@@ -22,6 +32,21 @@
       {
         "command": "curator.analyzeUncommittedDiff",
         "title": "Curator: Analyze Uncommitted Diff"
+      }
+    ],
+    "views": {
+      "curator": [
+        {
+          "id": "curatorView",
+          "name": "Curator"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "curatorView",
+        "contents": "Click the button below to start.\n[Analyze](command:curator.analyzeUncommittedDiff)",
+        "when": "true"
       }
     ]
   },

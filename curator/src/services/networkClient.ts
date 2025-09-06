@@ -1,6 +1,7 @@
 export interface TokenScore {
 	token: string;
 	score: number | null;
+	reason: string | null;
 }
 
 export interface AnalyzeResponse {
@@ -45,15 +46,20 @@ function parseAnalyzeResponse(value: unknown): AnalyzeResponse {
 		}
 		const token = item['token'];
 		const score = item['score'];
+		const reason = item['reason'];
 		if (typeof token !== 'string') {
 			throw new Error('Curator: Invalid analyzer response (token must be a string).');
 		}
 		if (!(score === null || typeof score === 'number')) {
 			throw new Error('Curator: Invalid analyzer response (score must be number|null).');
 		}
+		if (!(reason === null || typeof reason === 'string')) {
+			throw new Error('Curator: Invalid analyzer response (reason must be string|null).');
+		}
 		return {
 			token,
 			score: score === null ? null : clamp01(score),
+			reason: reason ?? null,
 		};
 	});
 	return { tokenScores: normalized };

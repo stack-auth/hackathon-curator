@@ -60,7 +60,7 @@ function applyTokenDecorations(
 	let offset = 0;
 	const bucketed: Map<number, vscode.DecorationOptions[]> = new Map();
 
-	for (const { token, score } of tokenScores) {
+	for (const { token, score, reason } of tokenScores) {
 		const length = token.length;
 		if (length > 0) {
 			const start = doc.positionAt(offset);
@@ -68,9 +68,15 @@ function applyTokenDecorations(
 			if (score !== null) {
 				const bin = scoreToBin(score);
 				const arr = bucketed.get(bin) ?? [];
+				const md = new vscode.MarkdownString();
+				md.appendText(`score: ${toFixed(clamp01(score), 3)}`);
+				if (reason) {
+					md.appendText(`\nreason: ${reason}`);
+				}
+				md.isTrusted = false;
 				arr.push({
 					range: new vscode.Range(start, end),
-					hoverMessage: new vscode.MarkdownString(`score: ${toFixed(clamp01(score), 3)}`),
+					hoverMessage: md,
 				});
 				bucketed.set(bin, arr);
 			}
@@ -81,7 +87,9 @@ function applyTokenDecorations(
 	// Apply decorations per bin
 	for (let bin = 0; bin < NUM_BINS; bin++) {
 		const type = decorationTypes.get(bin);
-		if (!type) continue;
+		if (!type) {
+			continue;
+		}
 		const options = bucketed.get(bin) ?? [];
 		editor.setDecorations(type, options);
 	}

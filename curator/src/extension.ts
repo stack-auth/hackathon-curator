@@ -3,8 +3,8 @@
 import * as vscode from 'vscode';
 import { getFirstUncommittedFileDiff } from './services/gitService';
 import { postFileDiff } from './services/networkClient';
-import { showHeatmapView } from './ui/heatmapView';
 import { openTokenHeatmapEditor } from './ui/editorHeatmap';
+import { CuratorViewProvider } from './sidebar/provider';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -41,7 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	context.subscriptions.push(disposable, analyzeDisposable);
+	const provider = new CuratorViewProvider();
+	const providerRegistration = vscode.window.registerWebviewViewProvider(CuratorViewProvider.viewType, provider);
+
+	context.subscriptions.push(disposable, analyzeDisposable, providerRegistration);
 }
 
 // This method is called when your extension is deactivated
