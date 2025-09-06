@@ -22,6 +22,7 @@ app.post('/file', (req, res) => {
   const body = (req.body || {}) as AlgoInput;
   const tokenScores = computeTokenScores({ fileDiff: body.fileDiff, file: body.file });
   res.json({ tokenScores });
+  console.log(`returned ${tokenScores.length} token scores`);
 });
 
 app.listen(PORT, () => {

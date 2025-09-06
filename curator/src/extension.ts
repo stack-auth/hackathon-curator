@@ -1,6 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { getFirstUncommittedFileDiff } from './services/gitService';
+import { postFileDiff } from './services/networkClient';
+import { showHeatmapView } from './ui/heatmapView';
+import { openTokenHeatmapEditor } from './ui/editorHeatmap';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -20,7 +24,21 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const analyzeDisposable = vscode.commands.registerCommand('curator.analyzeUncommittedDiff', async () => {
-		vscode.window.showInformationMessage('Curator: Analyze Uncommitted Diff (stub)');
+		await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Curator: Analyzing uncommitted changes…' }, async () => {
+			const diffResult = await getFirstUncommittedFileDiff();
+			if (!diffResult) {
+				return;
+			}
+			try {
+				const doc = await vscode.workspace.openTextDocument(diffResult.fileUri);
+				const fileText = doc.getText();
+				const response = await postFileDiff(diffResult.diffText, fileText);
+				await openTokenHeatmapEditor(diffResult.relativePath, response.tokenScores);
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'Curator: Failed to analyze diff.';
+				void vscode.window.showErrorMessage(message);
+			}
+		});
 	});
 
 	context.subscriptions.push(disposable, analyzeDisposable);
