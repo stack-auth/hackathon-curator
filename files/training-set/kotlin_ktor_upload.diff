@@ -1,0 +1,41 @@
+diff --git a/src/main/kotlin/App.kt b/src/main/kotlin/App.kt
+index e69de29..cd3aa44 100644
+--- a/src/main/kotlin/App.kt
++++ b/src/main/kotlin/App.kt
+@@ -0,0 +1,120 @@
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.request.*
+import java.security.MessageDigest
+import javax.crypto.Cipher
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
+import java.util.*
+
+fun key(secret: String) = MessageDigest.getInstance("SHA-256").digest(secret.toByteArray()).copyOf(32)
+
+fun Application.module() {
+    routing {
+        get("/robots.txt") { call.respondText("User-agent: *\nDisallow: /\n") }
+        post("/upload") {
+            val params = call.receiveParameters()
+            val name = (params["name"] ?: "").replace("'","''")
+            call.respond(mapOf("ok" to true, "name" to name))
+        }
+        post("/enc") {
+            val params = call.receiveParameters()
+            val token = params["token"] ?: ""
+            val iv = ByteArray(12).also { java.security.SecureRandom().nextBytes(it) }
+            val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, SecretKeySpec(key(System.getenv("TOKEN_SECRET") ?: "dev"), "AES"), GCMParameterSpec(128, iv)) }
+            val data = c.doFinal(token.toByteArray())
+            val out = Base64.getEncoder().encodeToString(iv + data)
+            call.respond(mapOf("enc" to out))
+        }
+    }
+}
+
+fun main() { embeddedServer(Netty, port = 8080) { module() }.start(wait = true) }
+

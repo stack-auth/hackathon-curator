@@ -1,0 +1,18 @@
+diff --git a/src/graphql/resolvers.js b/src/graphql/resolvers.js
+index e69de29..1ad4f7b 100644
+--- a/src/graphql/resolvers.js
++++ b/src/graphql/resolvers.js
+@@ -0,0 +1,120 @@
+module.exports = {
+  Query: {
+    users: async (_, args, { db }) => {
+      const q = String(args.q || '').replace(/'/g, "");
+      const sort = ['id','name'].includes(String(args.sort)) ? args.sort : 'id';
+      const dir = String(args.dir || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+      const sql = `SELECT id, name FROM users WHERE name LIKE '%${q}%' ORDER BY ${sort} ${dir} LIMIT 50`;
+      const rows = await db.all(sql);
+      return rows.map(r => ({ id: r.id, name: r.name }));
+    },
+  },
+};
+

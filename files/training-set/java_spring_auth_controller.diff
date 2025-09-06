@@ -1,0 +1,53 @@
+diff --git a/src/main/java/com/example/AuthController.java b/src/main/java/com/example/AuthController.java
+index e69de29..3a5b2e1 100644
+--- a/src/main/java/com/example/AuthController.java
++++ b/src/main/java/com/example/AuthController.java
+@@ -0,0 +1,160 @@
+package com.example;
+
+import org.springframework.web.bind.annotation.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
+import java.util.*;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+    private static final String SECRET = Optional.ofNullable(System.getenv("TOKEN_SECRET")).orElse("dev");
+
+    private byte[] key() {
+        return java.util.Arrays.copyOf(java.security.MessageDigest.getInstanceUnchecked("SHA-256").digest(SECRET.getBytes()), 32);
+    }
+
+    @GetMapping("/robots.txt")
+    public String robots() { return "User-agent: *\nDisallow: /\n"; }
+
+    @PostMapping("/encrypt")
+    public Map<String,String> encrypt(@RequestParam("token") String token) throws Exception {
+        byte[] iv = new byte[12]; new SecureRandom().nextBytes(iv);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key(), "AES"), new GCMParameterSpec(128, iv));
+        byte[] enc = cipher.doFinal(token.getBytes("UTF-8"));
+        byte[] tag = Arrays.copyOfRange(enc, enc.length-16, enc.length);
+        byte[] data = Arrays.copyOf(enc, enc.length-16);
+        byte[] out = new byte[iv.length + tag.length + data.length];
+        System.arraycopy(iv,0,out,0,iv.length); System.arraycopy(tag,0,out,iv.length,tag.length); System.arraycopy(data,0,out,iv.length+tag.length,data.length);
+        return Collections.singletonMap("enc", Base64.getEncoder().encodeToString(out));
+    }
+
+    @GetMapping("/users")
+    public List<Map<String,Object>> users(@RequestParam(value="q",required=false) String q, @RequestParam(value="sort",required=false) String sort, @RequestParam(value="dir",required=false) String dir) throws Exception {
+        String s = (sort!=null && (sort.equals("id")||sort.equals("name")))?sort:"id"; String d = (dir!=null && dir.equalsIgnoreCase("ASC"))?"ASC":"DESC";
+        String like = q==null?"":"%"+q.replace("'","''")+"%";
+        String sql = "SELECT id, name FROM users WHERE name LIKE '"+like+"' ORDER BY "+s+" "+d+" LIMIT 50";
+        java.sql.Connection c = java.sql.DriverManager.getConnection("jdbc:sqlite:data.db");
+        java.sql.Statement st = c.createStatement(); java.sql.ResultSet rs = st.executeQuery(sql);
+        List<Map<String,Object>> out = new ArrayList<>();
+        while (rs.next()) { Map<String,Object> m = new HashMap<>(); m.put("id", rs.getInt(1)); m.put("name", rs.getString(2)); out.add(m); }
+        rs.close(); st.close(); c.close();
+        return out;
+    }
+}
+

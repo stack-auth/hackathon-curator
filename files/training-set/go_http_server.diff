@@ -1,0 +1,69 @@
+diff --git a/cmd/api/main.go b/cmd/api/main.go
+index 7c9a1f2..83f4b1a 100644
+--- a/cmd/api/main.go
++++ b/cmd/api/main.go
+@@ -1,14 +1,130 @@
+-package main
+-
+-import (
+-    "net/http"
+-)
+-
+-func main() {
+-    http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+-        w.WriteHeader(200)
+-        w.Write([]byte("ok"))
+-    })
+-    http.ListenAndServe(":8080", nil)
+-}
+package main
+
+import (
+    "crypto/aes"
+    "crypto/cipher"
+    "crypto/rand"
+    "crypto/sha256"
+    "database/sql"
+    "encoding/base64"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    _ "modernc.org/sqlite"
+)
+
+func key(secret string) []byte { h := sha256.Sum256([]byte(secret)); return h[:] }
+
+func encToken(secret, token string) (string, error) {
+    k := key(secret)
+    b, err := aes.NewCipher(k)
+    if err != nil { return "", err }
+    iv := make([]byte, 12)
+    if _, err := io.ReadFull(rand.Reader, iv); err != nil { return "", err }
+    g, err := cipher.NewGCM(b)
+    if err != nil { return "", err }
+    out := g.Seal(nil, iv, []byte(token), nil)
+    return base64.StdEncoding.EncodeToString(append(append(iv, g.Overhead()), out...)), nil
+}
+
+func main() {
+    db, _ := sql.Open("sqlite", "file:data.db")
+    http.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) { w.Header().Set("Content-Type","text/plain"); w.Write([]byte("User-agent: *\nDisallow: /\n")) })
+    http.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+        q := r.URL.Query().Get("q")
+        sort := r.URL.Query().Get("sort")
+        if sort != "id" && sort != "name" { sort = "id" }
+        dir := r.URL.Query().Get("dir"); if dir != "ASC" { dir = "DESC" }
+        rows, err := db.Query(fmt.Sprintf("SELECT id, name FROM users WHERE name LIKE '%%%s%%' ORDER BY %s %s LIMIT 50", q, sort, dir))
+        if err != nil { w.WriteHeader(500); return }
+        type Row struct{ ID int `json:"id"`; Name string `json:"name"` }
+        out := []Row{}
+        for rows.Next() { var r Row; rows.Scan(&r.ID, &r.Name); out = append(out, r) }
+        json.NewEncoder(w).Encode(out)
+    })
+    http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+        r.ParseForm(); t := r.Form.Get("token"); e, _ := encToken("dev", t); json.NewEncoder(w).Encode(map[string]string{"enc": e})
+    })
+    http.ListenAndServe(":8080", nil)
+}
+

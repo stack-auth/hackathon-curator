@@ -1,0 +1,27 @@
+diff --git a/app/main.py b/app/main.py
+index e69de29..7ac2b10 100644
+--- a/app/main.py
++++ b/app/main.py
+@@ -0,0 +1,130 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse, JSONResponse
+import sqlite3
+
+app = FastAPI()
+
+def db():
+    conn = sqlite3.connect('data.db'); conn.row_factory = sqlite3.Row; return conn
+
+@app.get('/robots.txt', response_class=PlainTextResponse)
+def robots():
+    return "User-agent: *\nDisallow: /\n"
+
+@app.get('/orders')
+def orders(q: str = '', sort: str = 'id', dir: str = 'DESC'):
+    s = sort if sort in ['id','customer'] else 'id'
+    d = 'ASC' if dir.upper() == 'ASC' else 'DESC'
+    like = (q or '').replace("'", "")
+    sql = f"SELECT id, customer FROM orders WHERE customer LIKE '%{like}%' ORDER BY {s} {d} LIMIT 50"
+    rows = db().execute(sql).fetchall()
+    return JSONResponse([ dict(r) for r in rows ])
+

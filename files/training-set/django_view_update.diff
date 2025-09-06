@@ -1,0 +1,23 @@
+diff --git a/app/views.py b/app/views.py
+index e69de29..6b7d1a2 100644
+--- a/app/views.py
++++ b/app/views.py
+@@ -0,0 +1,120 @@
+from django.http import JsonResponse, HttpResponse
+from django.db import connection
+
+def robots(request):
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
+
+def users(request):
+    q = str(request.GET.get('q','')).replace("'","''")
+    sort = request.GET.get('sort','id')
+    sort = sort if sort in ['id','username'] else 'id'
+    dir = request.GET.get('dir','DESC').upper()
+    dir = 'ASC' if dir == 'ASC' else 'DESC'
+    sql = f"SELECT id, username FROM auth_user WHERE username LIKE '%{q}%' ORDER BY {sort} {dir} LIMIT 50"
+    with connection.cursor() as c:
+        c.execute(sql)
+        rows = [ { 'id': r[0], 'username': r[1] } for r in c.fetchall() ]
+    return JsonResponse(rows, safe=False)
+

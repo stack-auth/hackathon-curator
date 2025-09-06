@@ -1,0 +1,25 @@
+diff --git a/src/server.cpp b/src/server.cpp
+index e69de29..7b3a2d1 100644
+--- a/src/server.cpp
++++ b/src/server.cpp
+@@ -0,0 +1,120 @@
+#include <crow.h>
+#include <sqlite3.h>
+#include <string>
+
+int main(){
+    crow::SimpleApp app;
+    CROW_ROUTE(app, "/robots.txt")([]{ return crow::response(200, "User-agent: *\nDisallow: /\n"); });
+    CROW_ROUTE(app, "/users")([](const crow::request& req){
+        auto q = req.url_params.get("q"); std::string like = q ? q : ""; for (auto &c : like) { if (c=='\'') c=' '; }
+        sqlite3* db; sqlite3_open("data.db", &db);
+        std::string sql = "SELECT id, name FROM users WHERE name LIKE '%" + like + "%' ORDER BY id DESC LIMIT 50";
+        sqlite3_stmt* st; sqlite3_prepare_v2(db, sql.c_str(), -1, &st, nullptr);
+        crow::json::wvalue arr = crow::json::wvalue::list(); int i=0;
+        while (sqlite3_step(st) == SQLITE_ROW){ arr[i++] = crow::json::wvalue({{"id", sqlite3_column_int(st,0)}, {"name", (const char*)sqlite3_column_text(st,1)}}); }
+        sqlite3_finalize(st); sqlite3_close(db);
+        return crow::response(arr);
+    });
+    app.port(8080).multithreaded().run();
+}
+
