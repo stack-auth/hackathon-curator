@@ -204,6 +204,18 @@ app.get('/api/results', async (_req, res) => {
   }
 });
 
+// Score a single file for incremental UI progress
+app.get('/api/score', async (req, res) => {
+  const p = (req.query.path as string) || '';
+  if (!p || p.includes('..')) return res.status(400).json({ error: 'bad path' });
+  try {
+    const result = await scoreFile(p);
+    res.json({ result });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || 'failed' });
+  }
+});
+
 // Raw file content for syntax highlighting in the browser
 app.get('/raw', async (req, res) => {
   const p = (req.query.path as string) || '';

@@ -14,6 +14,9 @@ const heatmapEl = el('heatmap');
 const highlightEl = el('highlight');
 const fileMetaEl = el('fileMeta');
 const filterEl = el('filter');
+const overlayEl = el('loadingOverlay');
+const loadingTextEl = el('loadingDetail');
+const loadingBarEl = el('loadingBar');
 
 function scoreToColor(score) {
   // Map 0 -> green, 1 -> red (via yellow)
@@ -99,12 +102,47 @@ async function loadConfig() {
 }
 
 async function loadResults() {
-  statusEl.textContent = 'Scoring…';
-  const r = await fetch('/api/results');
-  const data = await r.json();
-  state.results = data.results || [];
-  statusEl.textContent = `Ready (${state.results.length} files)`;
-  renderAll();
+  // Show overlay and step-by-step progress
+  overlayEl.classList.remove('hidden');
+  statusEl.textContent = 'Reloading…';
+  loadingTextEl.textContent = 'Preparing file list…';
+  loadingBarEl.style.width = '0%';
+
+  try {
+    // 1) Get files
+    const filesResp = await fetch('/api/files');
+    const filesData = await filesResp.json();
+    const files = (filesData.files || []);
+    state.results = [];
+    renderFileList();
+
+    // 2) Score each file sequentially for clear progress
+    const total = files.length || 0;
+    let done = 0;
+    for (const p of files) {
+      done++;
+      loadingTextEl.textContent = `Scoring ${done}/${total} • ${p}`;
+      loadingBarEl.style.width = total ? `${Math.round((done/total)*100)}%` : '100%';
+      statusEl.textContent = `Scoring ${done}/${total}`;
+
+      try {
+        const r = await fetch(`/api/score?path=${encodeURIComponent(p)}`);
+        const data = await r.json();
+        if (data && data.result) {
+          state.results.push(data.result);
+        }
+      } catch (e) {
+        console.error('Failed scoring', p, e);
+      }
+    }
+
+    // Sort and render
+    state.results.sort((a, b) => a.path.localeCompare(b.path));
+    statusEl.textContent = `Ready (${state.results.length} files)`;
+    renderAll();
+  } finally {
+    overlayEl.classList.add('hidden');
+  }
 }
 
 filterEl.addEventListener('input', () => renderFileList());
