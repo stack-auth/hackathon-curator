@@ -109,7 +109,7 @@
 			} else {
 				if (status) status.textContent = msg.filename ? ('Results for: ' + msg.filename) : '';
 				if (resultsEl) {
-					resultsEl.innerHTML = '<div class="file">\n  <div class="filename">' + (msg.filename ? msg.filename : '') + '<span class="actions"><button class="open-file" data-file="' + escapeHtml(msg.filename || '') + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
+					resultsEl.innerHTML = '<div class="file collapsed">\n  <div class="filename">' + (msg.filename ? msg.filename : '') + '<span class="actions"><button class="open-file" data-file="' + escapeHtml(msg.filename || '') + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + escapeHtml(msg.filename || '') + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
 					animateTokens(resultsEl.querySelector('.file .code'));
 				}
 			}
@@ -117,9 +117,9 @@
 			if (!resultsEl) return;
 			const safeName = escapeHtml(msg.filename || '');
 			if (msg.error) {
-				resultsEl.innerHTML += '<div class="file">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button></span></div>\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
+				resultsEl.innerHTML += '<div class="file collapsed">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + safeName + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
 			} else {
-				resultsEl.innerHTML += '<div class="file">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
+				resultsEl.innerHTML += '<div class="file collapsed">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + safeName + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
 				animateTokens(resultsEl.lastElementChild && resultsEl.lastElementChild.querySelector('.code'));
 			}
 		} else if (msg.type === 'status') {
@@ -161,10 +161,18 @@
 				const target = e.target;
 				if (!(target instanceof Element)) return;
 				const openBtn = (target.closest && target.closest('.open-file')) ? target.closest('.open-file') : null;
+				const openHtmlBtn = (target.closest && target.closest('.open-html')) ? target.closest('.open-html') : null;
 				if (openBtn) {
 					const filename = openBtn.getAttribute('data-file');
 					if (filename) {
 						try { vscode.postMessage({ type: 'openFile', filename }); } catch (e) {}
+					}
+					return;
+				}
+				if (openHtmlBtn) {
+					const filename = openHtmlBtn.getAttribute('data-file');
+					if (filename) {
+						try { vscode.postMessage({ type: 'openHtml', filename }); } catch (e) {}
 					}
 					return;
 				}
