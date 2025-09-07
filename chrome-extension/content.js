@@ -1,3 +1,4 @@
+
 async function getDiffs() {
   // keep checking until diffs load
   while (true) {
@@ -11,7 +12,7 @@ async function getDiffs() {
 
         if (marker && inner) {
           changedLines.push({
-            type: marker.innerText.trim() === "+" ? "addition" : "deletion",
+            type: marker.innerText.trim(),
             text: inner.innerText.trim()
           });
         }
@@ -32,11 +33,15 @@ async function collectDiffData() {
 }
 
 async function main() {
-  const fileDiffs = collectDiffData();
+  const fileDiffs = await collectDiffData();
   console.log("Collected diffs:", fileDiffs);
 
-  //const tokenScores = await fetchHeatmap(fileDiffs);
-  //console.log("Heatmap results:", tokenScores);
+  let finalDiff = ''
+  fileDiffs.forEach((async fileDiff=>{
+    finalDiff += (fileDiff.type + fileDiff.text + "\n")
+  }))
+  const tokenScores = await window.postFileDiff(finalDiff)
+  console.log(`token scores are ${JSON.stringify(tokenScores)}`)
 }
 
 main();

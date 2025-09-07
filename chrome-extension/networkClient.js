@@ -1,29 +1,20 @@
-export interface TokenScore {
-	token: string;
-	score: number | null;
-}
-
-export interface AnalyzeResponse {
-	tokenScores: TokenScore[];
-}
-
 const DEFAULT_SERVER_URL = 'http://localhost:3005/file';
 
-export async function postFileDiff(fileDiff: string, file: string, serverUrl: string = DEFAULT_SERVER_URL): Promise<AnalyzeResponse> {
+window.postFileDiff = async function (fileDiff, serverUrl = DEFAULT_SERVER_URL) {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), 10_000);
 	try {
 		const res = await fetch(serverUrl, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ fileDiff, file }),
+			body: JSON.stringify({ fileDiff, file:'' }),
 			signal: controller.signal,
 		});
 
 		if (!res.ok) {
 			throw new Error(`Curator: Analyzer request failed (${res.status} ${res.statusText}).`);
 		}
-		const data = (await res.json()) as unknown;
+		const data = (await res.json());
 		const parsed = parseAnalyzeResponse(data);
 		return parsed;
 	} finally {
@@ -31,7 +22,7 @@ export async function postFileDiff(fileDiff: string, file: string, serverUrl: st
 	}
 }
 
-function parseAnalyzeResponse(value: unknown): AnalyzeResponse {
+function parseAnalyzeResponse(value) {
 	if (!isRecord(value)) {
 		throw new Error('Curator: Invalid analyzer response (not an object).');
 	}
@@ -39,7 +30,7 @@ function parseAnalyzeResponse(value: unknown): AnalyzeResponse {
 	if (!Array.isArray(tokenScores)) {
 		throw new Error('Curator: Invalid analyzer response (tokenScores missing or not an array).');
 	}
-	const normalized: TokenScore[] = tokenScores.map((item) => {
+	const normalized = tokenScores.map((item) => {
 		if (!isRecord(item)) {
 			throw new Error('Curator: Invalid analyzer response (tokenScores item not an object).');
 		}
@@ -59,11 +50,11 @@ function parseAnalyzeResponse(value: unknown): AnalyzeResponse {
 	return { tokenScores: normalized };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value){
 	return typeof value === 'object' && value !== null;
 }
 
-function clamp01(value: number): number {
+function clamp01(value) {
 	if (Number.isNaN(value)) {
 		return 0;
 	}
