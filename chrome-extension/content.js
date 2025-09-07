@@ -58,10 +58,10 @@ async function main() {
     const style = document.createElement('style');
     style.id = 'curator-heatmap-styles';
     style.textContent = `
-      .curator-heatmap { background:#0f172a; color:#e5e7eb; border:1px solid #1f2937; border-radius:8px; padding:10px; }
+      .curator-heatmap { background:#0f172a; color:#e5e7eb; border:1px solid #1f2937; border-radius:8px; padding: 1px; }
       .curator-pre { margin:0; white-space:pre-wrap; word-break:break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; line-height:1.5; }
-      .curator-token { padding:1px 2px; border-radius:2px; margin-right:1px; }
-      .curator-meta { font-size:12px; color:#94a3b8; margin-bottom:6px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Noto Sans, sans-serif; }
+      .curator-token { padding:0px; border-radius:2px; margin-right:1px; }
+      .curator-meta { font-size:12px; color:#94a3b8; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Noto Sans, sans-serif; }
     `;
     document.head.appendChild(style);
   }
