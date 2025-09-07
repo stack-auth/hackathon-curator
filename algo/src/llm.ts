@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { createHash } from 'crypto';
 import { config as dotenvConfig } from 'dotenv';
 import OpenAI from 'openai';
 
@@ -58,8 +59,9 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
   const inflightHit = inflight.get(input);
   if (inflightHit) return await inflightHit;
 
-  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5-mini';
+  const model = speed === "fast" ? 'gpt-5-nano' : 'gpt-5';
   const p: Promise<any> = (async () => {
+    const systemMsg = `You are a strict JSON generator. Respond with one JSON object only. No markdown fences, no extra text.',`;
     try {
       const uuid = crypto.randomUUID();
       console.log("llm-call " + model + " " + uuid);
@@ -72,14 +74,27 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
         messages: [
           {
             role: 'system',
-            content:
-              'You are a strict JSON generator. Respond with one JSON object only. No markdown fences, no extra text.',
+            content: systemMsg,
           },
           { role: 'user', content: input },
         ],
       });
       console.timeEnd("llm-call " + model + " " + uuid);
       const text = resp.choices?.[0]?.message?.content ?? '';
+
+      // Persist exact input and exact string output under files/output-data/<sha256(input)>.txt
+      const outDir = path.join(ROOT, '..', 'files', 'output-data');
+      fs.mkdirSync(outDir, { recursive: true });
+      const hash = createHash('sha256').update(input).digest('hex');
+      const outPath = path.join(outDir, `${hash}.txt`);
+      const payload = `----- input -----\n${input}\n----- output -----\n${text}`;
+      fs.writeFileSync(outPath, payload, 'utf8');
+
+      // Persist exact input and exact string output under files/distill.jsonl
+      // in this format: {"messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "What is the capital of France?"}, {"role": "assistant", "content": "Paris"}]}
+      const distillPath = path.join(ROOT, '..', 'files', 'distill.jsonl');
+      fs.appendFileSync(distillPath, JSON.stringify({ messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: input }, { role: 'assistant', content: text }] }) + '\n', 'utf8');
+
       let parsed: any;
       try {
         parsed = JSON.parse(text);
