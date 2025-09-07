@@ -1,10 +1,15 @@
 import express from 'express';
 import { computeTokenScores, AlgoInput } from './algo';
-
- 
+import cors from "cors"
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+
+app.use(cors({
+  origin: "*", // allow any origin (ok for dev)
+  methods: ["GET","POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 
 const PORT = Number(process.env.PORT || 3005);
 

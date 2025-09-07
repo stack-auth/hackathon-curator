@@ -3,8 +3,8 @@
   "description": "Adds heatmaps to GitHub diffs",
   "version": "1.0",
   "manifest_version": 3,
-  "permissions": ["storage"],
-
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["http://localhost:3005/*"],
   "content_scripts": [
     {
       "matches": [
@@ -12,6 +12,7 @@
       "https://github.com/*/commit/*",
       "https://github.com/*/compare/*"
     ],
-      "js": ["content.js"]    }
+    "js": ["networkClient.js","content.js"],
+    "type": "module"    }
   ]
 }
