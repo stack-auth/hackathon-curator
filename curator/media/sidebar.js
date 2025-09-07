@@ -25,7 +25,11 @@
 		if (spinner) spinner.classList.toggle('hidden', !isLoading);
 		if (analyzeLabel) analyzeLabel.classList.toggle('hidden', !!isLoading);
 		if (status) status.textContent = isLoading ? 'Running analysis on uncommitted files…' : '';
-		if (isLoading && resultsEl) resultsEl.innerHTML = '';
+		if (isLoading) {
+			fileEntries.clear();
+			collapsedFiles.clear();
+			if (resultsEl) resultsEl.innerHTML = '';
+		}
 		if (progress) progress.classList.toggle('hidden', !isLoading);
 	}
 
