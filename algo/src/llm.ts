@@ -66,7 +66,7 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
   const miniNormal = "ft:gpt-4.1-mini-2025-04-14:personal::CCwomXYh";
   const miniShortEpoch = "ft:gpt-4.1-mini-2025-04-14:personal:2025-09-06-man-vs-machine-mini-low-epoch:CCwp0E1P";
 
-  const model: string = gpt5Mini;
+  const model: string = gpt5;
   const p: Promise<any> = (async () => {
     const systemMsg = `You are a strict JSON generator. Respond with one JSON object only. No markdown fences, no extra text.',`;
     try {
@@ -77,7 +77,7 @@ export async function promptLlm(input: string, speed: "fast" | "slow"): Promise<
         model,
         // Ask for strict JSON output (single JSON object)
         response_format: { type: 'json_object' },
-        reasoning_effort: model === "gpt-5" ? "high" : model.startsWith("gpt-5") ? "low" : undefined,
+        reasoning_effort: model === "gpt-5" ? "low" : model.startsWith("gpt-5") ? "low" : undefined,
         messages: [
           {
             role: 'system',

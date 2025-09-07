@@ -45,7 +45,14 @@ async function splitDiffIntoLines(input: AlgoInput): Promise<{ line: string, has
   return response.lines;
 }
 
+let waitingPromise: Promise<void> | null = null;
+
 export async function computeTokenScores(input: AlgoInput): Promise<{ tokenScores: TokenScore[] }> {
+  while (waitingPromise) await waitingPromise;
+  waitingPromise = new Promise(async (resolve) => setTimeout(resolve, 200 + 1000 * Math.random()));
+  await waitingPromise;
+  waitingPromise = null;
+
   const lines = await splitDiffIntoLines(input);
   const tokens: TokenScore[] = [];
   const splitLineIntoTokensRegex = /(?:[^a-zA-Z0-9]+|[a-zA-Z0-9]+)/g;
