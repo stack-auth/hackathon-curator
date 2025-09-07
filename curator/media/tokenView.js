@@ -30,7 +30,7 @@
       let style = '';
       let title = '';
       if (score !== null && score !== undefined){
-        style = 'background:' + scoreToColor(score) + ';';
+        style = 'background:' + scoreToColor(score) + '; color:#fff;';
         title = 'score: ' + clamp01(score).toFixed(3) + (reason ? '\nreason: ' + String(reason) : '');
       }
       parts.push('<span class="tok" data-tip="' + escapeHtml(title) + '" style="' + style + '">' + token + '</span>');

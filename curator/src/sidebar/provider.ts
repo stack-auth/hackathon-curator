@@ -64,7 +64,7 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     .status { margin-top: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
     .results { margin-top: 12px; border-top: 1px solid var(--vscode-editorWidget-border); padding-top: 12px; }
     .code { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12.5px; }
-    .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: #fff; }
+    .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: var(--vscode-foreground); }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .tok.anim { animation: fadeIn 0.12s ease both; }
     .file { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--vscode-editorWidget-border); }
@@ -170,7 +170,7 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
   <style>
     body { font-family: var(--vscode-font-family); margin: 0; padding: 12px; }
     .code { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12.5px; }
-    .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: #fff; }
+    .tok { display: inline; padding: 1px 2px; border-radius: 3px; color: var(--vscode-foreground); }
     .tooltip { position: fixed; z-index: 1000; background: var(--vscode-editorWidget-background); color: var(--vscode-foreground); border: 1px solid var(--vscode-editorWidget-border); border-radius: 4px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); pointer-events: none; opacity: 0; transition: opacity 0.05s ease-in-out; max-width: 360px; white-space: pre-wrap; }
     .tooltip.visible { opacity: 1; }
   </style>
