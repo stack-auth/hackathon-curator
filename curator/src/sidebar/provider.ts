@@ -68,7 +68,8 @@ export class CuratorViewProvider implements vscode.WebviewViewProvider {
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .tok.anim { animation: fadeIn 0.12s ease both; }
     .file { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--vscode-editorWidget-border); }
-    .filename { margin-bottom: 6px; font-weight: 600; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .filename { margin-bottom: 6px; font-weight: 600; cursor: default; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .filename-label { display: inline-block; cursor: pointer; }
     .filename::before { content: '▼ '; color: var(--vscode-descriptionForeground); }
     .file.collapsed .filename::before { content: '▶ '; }
     .file.collapsed .code { display: none; }

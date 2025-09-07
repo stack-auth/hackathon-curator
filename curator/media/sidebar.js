@@ -47,6 +47,17 @@
 		return 'hsl(' + hue + ', 85%, 40%)';
 	}
 
+	function averageScore(tokenScores) {
+		let sum = 0;
+		let count = 0;
+		for (const item of (tokenScores || [])) {
+			const s = item ? item.score : null;
+			if (typeof s === 'number') { sum += s; count++; }
+		}
+		if (count === 0) return null;
+		return sum / count;
+	}
+
 	function renderTokens(tokenScores) {
 		const parts = [];
 		for (const item of (tokenScores || [])) {
@@ -61,6 +72,20 @@
 			parts.push('<span class="tok" data-tip="' + escapeHtml(title) + '" style="' + style + '">' + token + '</span>');
 		}
 		return parts.join('');
+	}
+
+	function renderFilename(name, tokenScores) {
+		const avg = averageScore(tokenScores);
+		let labelStyle = '';
+		let tip = '';
+		if (avg !== null) {
+			labelStyle = 'color:' + scoreToColor(avg) + ';';
+			tip = 'avg: ' + clamp01(avg).toFixed(3);
+		}
+		const safeName = escapeHtml(name || '');
+		return '<div class="filename"' + (tip ? ' data-tip="' + escapeHtml(tip) + '"' : '') + '>'
+			+ '<span class="filename-label"' + (labelStyle ? ' style="' + labelStyle + '"' : '') + '>' + safeName + '</span>'
+			+ '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + safeName + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>';
 	}
 
 	function animateTokens(container) {
@@ -109,17 +134,17 @@
 			} else {
 				if (status) status.textContent = msg.filename ? ('Results for: ' + msg.filename) : '';
 				if (resultsEl) {
-					resultsEl.innerHTML = '<div class="file collapsed">\n  <div class="filename">' + (msg.filename ? msg.filename : '') + '<span class="actions"><button class="open-file" data-file="' + escapeHtml(msg.filename || '') + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + escapeHtml(msg.filename || '') + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
+					resultsEl.innerHTML = '<div class="file collapsed">\n  ' + renderFilename(msg.filename || '', msg.tokenScores || []) + '\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
 					animateTokens(resultsEl.querySelector('.file .code'));
 				}
 			}
 		} else if (msg.type === 'renderFile') {
 			if (!resultsEl) return;
-			const safeName = escapeHtml(msg.filename || '');
+			const fname = msg.filename || '';
 			if (msg.error) {
-				resultsEl.innerHTML += '<div class="file collapsed">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + safeName + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
+				resultsEl.innerHTML += '<div class="file collapsed">\n  ' + renderFilename(fname, []) + '\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
 			} else {
-				resultsEl.innerHTML += '<div class="file collapsed">\n  <div class="filename">' + safeName + '<span class="actions"><button class="open-file" data-file="' + safeName + '" title="Open file">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-6-6zm1 7V4.5L18.5 10H15z"/></svg></button><button class="open-html" data-file="' + safeName + '" title="Open HTML view">\n<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg></button></span></div>\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
+				resultsEl.innerHTML += '<div class="file collapsed">\n  ' + renderFilename(fname, msg.tokenScores || []) + '\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
 				animateTokens(resultsEl.lastElementChild && resultsEl.lastElementChild.querySelector('.code'));
 			}
 		} else if (msg.type === 'status') {
@@ -152,6 +177,10 @@
 				if (target.classList.contains('tok')) {
 					const tip = target.getAttribute('data-tip') || '';
 					showTooltip(tip, e.clientX, e.clientY);
+				} else if (target.classList.contains('filename-label')) {
+					const header = target.parentElement && target.parentElement.classList.contains('filename') ? target.parentElement : null;
+					const tip = header ? (header.getAttribute('data-tip') || '') : '';
+					showTooltip(tip, e.clientX, e.clientY);
 				} else {
 					hideTooltip();
 				}
@@ -176,9 +205,9 @@
 					}
 					return;
 				}
-				const header = target.closest('.filename');
+				const header = target.closest('.filename-label');
 				if (header) {
-					const fileEl = header.parentElement;
+					const fileEl = header.parentElement && header.parentElement.parentElement;
 					if (fileEl && fileEl.classList.contains('file')) {
 						fileEl.classList.toggle('collapsed');
 					}
