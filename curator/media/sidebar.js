@@ -13,6 +13,10 @@
 	const progressLabel = document.getElementById('progressLabel');
 	const analyzeLabel = document.getElementById('analyzeLabel');
 
+	// Keep state of files to enable sorting and re-rendering
+	const fileEntries = new Map(); // name -> { tokens: TokenScore[] | null, error: string | null }
+	const collapsedFiles = new Set(); // names that are currently collapsed
+
 	let progressTotal = 0;
 	let progressDone = 0;
 
@@ -133,20 +137,14 @@
 				if (resultsEl) resultsEl.textContent = '';
 			} else {
 				if (status) status.textContent = msg.filename ? ('Results for: ' + msg.filename) : '';
-				if (resultsEl) {
-					resultsEl.innerHTML = '<div class="file collapsed">\n  ' + renderFilename(msg.filename || '', msg.tokenScores || []) + '\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
-					animateTokens(resultsEl.querySelector('.file .code'));
-				}
+				addOrUpdateFile(msg.filename || '', msg.tokenScores || null, null);
+				renderAllFiles();
 			}
 		} else if (msg.type === 'renderFile') {
 			if (!resultsEl) return;
 			const fname = msg.filename || '';
-			if (msg.error) {
-				resultsEl.innerHTML += '<div class="file collapsed">\n  ' + renderFilename(fname, []) + '\n  <div class="error">' + escapeHtml(String(msg.error)) + '</div>\n</div>';
-			} else {
-				resultsEl.innerHTML += '<div class="file collapsed">\n  ' + renderFilename(fname, msg.tokenScores || []) + '\n  <div class="code">' + renderTokens(msg.tokenScores || []) + '</div>\n</div>';
-				animateTokens(resultsEl.lastElementChild && resultsEl.lastElementChild.querySelector('.code'));
-			}
+			addOrUpdateFile(fname, msg.tokenScores || null, msg.error ? String(msg.error) : null);
+			renderAllFiles();
 		} else if (msg.type === 'status') {
 			if (status) status.textContent = msg.text || '';
 		} else if (msg.type === 'progressStart') {
@@ -164,6 +162,41 @@
 			if (progress && progressDone >= progressTotal) {
 				progress.classList.add('hidden');
 			}
+		}
+	}
+
+	function addOrUpdateFile(name, tokensOrNull, errorOrNull) {
+		if (!name) return;
+		const exists = fileEntries.has(name);
+		fileEntries.set(name, { tokens: tokensOrNull, error: errorOrNull });
+		if (!exists) {
+			collapsedFiles.add(name); // default collapsed
+		}
+	}
+
+	function renderAllFiles() {
+		if (!resultsEl) return;
+		const items = [];
+		for (const [name, entry] of fileEntries.entries()) {
+			const avg = entry && entry.tokens ? averageScore(entry.tokens) : null;
+			const sortKey = avg === null ? -1 : avg;
+			items.push({ name, entry, sortKey });
+		}
+		items.sort((a, b) => b.sortKey - a.sortKey);
+		const parts = [];
+		for (const { name, entry } of items) {
+			const isCollapsed = collapsedFiles.has(name);
+			const fileOpen = '<div class="file' + (isCollapsed ? ' collapsed' : '') + '" data-name="' + escapeHtml(name) + '">\n  ';
+			const header = renderFilename(name, entry.tokens || []);
+			const body = entry.error ? ('  <div class="error">' + escapeHtml(String(entry.error)) + '</div>') : ('  <div class="code">' + renderTokens(entry.tokens || []) + '</div>');
+			parts.push(fileOpen + header + '\n' + body + '\n</div>');
+		}
+		resultsEl.innerHTML = parts.join('\n');
+		// Animate last added file tokens if visible
+		const lastFile = resultsEl.lastElementChild;
+		if (lastFile) {
+			const code = lastFile.querySelector('.code');
+			if (code) animateTokens(code);
 		}
 	}
 
@@ -210,6 +243,10 @@
 					const fileEl = header.parentElement && header.parentElement.parentElement;
 					if (fileEl && fileEl.classList.contains('file')) {
 						fileEl.classList.toggle('collapsed');
+						const fileName = fileEl.getAttribute('data-name');
+						if (fileName) {
+							if (fileEl.classList.contains('collapsed')) collapsedFiles.add(fileName); else collapsedFiles.delete(fileName);
+						}
 					}
 				}
 			});
