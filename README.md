@@ -1,6 +1,6 @@
 # hackathon-curator
 
-**Grand Prize winner of the Man vs. Machine hackathon featured in Wired:** https://www.wired.com/story/san-francisco-hackathon-man-vs-machine/
+**Grand Prize winner of the Man vs. Machine hackathon featured in [Wired](https://www.wired.com/story/san-francisco-hackathon-man-vs-machine/).**
 
 Curator is a tiny toolkit that captures GitHub diffs, scores every token for risk, and overlays a heatmap so reviewers immediately see what matters.
 
