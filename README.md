@@ -35,5 +35,5 @@ npm run dev
 cd curator
 npm install
 npm run watch
-npm run dev  #in new terminal
+npm run dev  # in new terminal
 ```
