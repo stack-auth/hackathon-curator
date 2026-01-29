@@ -1,0 +1,26 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" fill="#0f172a"/>
+  <rect x="60" y="60" width="1080" height="600" rx="20" fill="#111827" stroke="#1f2937" stroke-width="2"/>
+  <text x="96" y="120" font-family="Inter, Arial, sans-serif" font-size="24" fill="#f8fafc">Curator Flow</text>
+  <text x="96" y="150" font-family="Inter, Arial, sans-serif" font-size="16" fill="#94a3b8">From GitHub diff → ML scores → reviewer guidance</text>
+
+  <rect x="110" y="220" width="260" height="120" rx="16" fill="#0b1220" stroke="#1f2937" stroke-width="2"/>
+  <text x="150" y="270" font-family="Inter, Arial, sans-serif" font-size="18" fill="#e2e8f0">Diff capture</text>
+  <text x="150" y="295" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Chrome extension</text>
+
+  <rect x="470" y="220" width="260" height="120" rx="16" fill="#0b1220" stroke="#1f2937" stroke-width="2"/>
+  <text x="510" y="270" font-family="Inter, Arial, sans-serif" font-size="18" fill="#e2e8f0">Token scoring</text>
+  <text x="510" y="295" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Algo server</text>
+
+  <rect x="830" y="220" width="260" height="120" rx="16" fill="#0b1220" stroke="#1f2937" stroke-width="2"/>
+  <text x="870" y="270" font-family="Inter, Arial, sans-serif" font-size="18" fill="#e2e8f0">Reviewer focus</text>
+  <text x="870" y="295" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">VS Code + PR UI</text>
+
+  <line x1="370" y1="280" x2="470" y2="280" stroke="#38bdf8" stroke-width="4"/>
+  <line x1="730" y1="280" x2="830" y2="280" stroke="#38bdf8" stroke-width="4"/>
+
+  <rect x="110" y="400" width="980" height="180" rx="18" fill="#0b1220" stroke="#1f2937" stroke-width="2"/>
+  <text x="150" y="450" font-family="Inter, Arial, sans-serif" font-size="18" fill="#e2e8f0">Reviewer outcome</text>
+  <text x="150" y="480" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Curator highlights risk, reasoning, and next steps inside the diff.</text>
+  <text x="150" y="510" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Teams stay fast without missing the scary parts.</text>
+</svg>
