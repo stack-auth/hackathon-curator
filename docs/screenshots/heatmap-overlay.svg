@@ -1,0 +1,34 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <title>Token risk heatmap overlay on diff content</title>
+  <rect width="1200" height="720" fill="#0f172a"/>
+  <rect x="60" y="60" width="1080" height="600" rx="18" fill="#111827" stroke="#1f2937" stroke-width="2"/>
+  <text x="96" y="120" font-family="Inter, Arial, sans-serif" font-size="24" fill="#f8fafc">Curator Heatmap</text>
+  <text x="96" y="150" font-family="Inter, Arial, sans-serif" font-size="16" fill="#94a3b8">Token risk overlay on diff content</text>
+
+  <rect x="96" y="200" width="1000" height="48" rx="12" fill="#1f2937"/>
+  <text x="120" y="232" font-family="Menlo, Consolas, monospace" font-size="18" fill="#e2e8f0">for (const file of files) {</text>
+
+  <rect x="96" y="268" width="1000" height="48" rx="12" fill="#1f2937"/>
+  <text x="120" y="300" font-family="Menlo, Consolas, monospace" font-size="18" fill="#e2e8f0">  const score = model.rank(file.diff)</text>
+  <rect x="500" y="278" width="120" height="28" rx="6" fill="rgba(239,68,68,0.45)"/>
+
+  <rect x="96" y="336" width="1000" height="48" rx="12" fill="#1f2937"/>
+  <text x="120" y="368" font-family="Menlo, Consolas, monospace" font-size="18" fill="#e2e8f0">  const tokens = tokenize(file.diff)</text>
+  <rect x="430" y="346" width="140" height="28" rx="6" fill="rgba(245,158,11,0.45)"/>
+
+  <rect x="96" y="404" width="1000" height="48" rx="12" fill="#1f2937"/>
+  <text x="120" y="436" font-family="Menlo, Consolas, monospace" font-size="18" fill="#e2e8f0">  annotate(tokens, score)</text>
+  <rect x="360" y="414" width="160" height="28" rx="6" fill="rgba(34,197,94,0.45)"/>
+
+  <rect x="96" y="472" width="1000" height="48" rx="12" fill="#1f2937"/>
+  <text x="120" y="504" font-family="Menlo, Consolas, monospace" font-size="18" fill="#e2e8f0">}</text>
+
+  <rect x="96" y="560" width="360" height="90" rx="14" fill="#0b1220" stroke="#1f2937" stroke-width="1"/>
+  <text x="118" y="598" font-family="Inter, Arial, sans-serif" font-size="16" fill="#e2e8f0">Legend</text>
+  <rect x="120" y="612" width="20" height="20" rx="4" fill="rgba(34,197,94,0.45)"/>
+  <text x="150" y="628" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Low risk</text>
+  <rect x="230" y="612" width="20" height="20" rx="4" fill="rgba(245,158,11,0.45)"/>
+  <text x="260" y="628" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Medium</text>
+  <rect x="330" y="612" width="20" height="20" rx="4" fill="rgba(239,68,68,0.45)"/>
+  <text x="360" y="628" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">High</text>
+</svg>

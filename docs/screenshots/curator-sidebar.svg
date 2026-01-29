@@ -1,0 +1,28 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <title>Curator reviewer panel with highlighted diffs</title>
+  <rect width="1200" height="720" fill="#f1f5f9"/>
+  <rect x="60" y="60" width="1080" height="600" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="60" y="60" width="320" height="600" rx="18" fill="#0f172a"/>
+  <text x="100" y="120" font-family="Inter, Arial, sans-serif" font-size="22" fill="#f8fafc">Curator Panel</text>
+
+  <rect x="90" y="160" width="260" height="90" rx="14" fill="#111827"/>
+  <text x="110" y="200" font-family="Inter, Arial, sans-serif" font-size="16" fill="#e2e8f0">Risky diff: auth.ts</text>
+  <text x="110" y="224" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Tokens flagged: 14</text>
+
+  <rect x="90" y="270" width="260" height="90" rx="14" fill="#111827"/>
+  <text x="110" y="310" font-family="Inter, Arial, sans-serif" font-size="16" fill="#e2e8f0">UI review: nav.tsx</text>
+  <text x="110" y="334" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Tokens flagged: 6</text>
+
+  <rect x="90" y="380" width="260" height="90" rx="14" fill="#111827"/>
+  <text x="110" y="420" font-family="Inter, Arial, sans-serif" font-size="16" fill="#e2e8f0">Security: db.ts</text>
+  <text x="110" y="444" font-family="Inter, Arial, sans-serif" font-size="14" fill="#94a3b8">Tokens flagged: 9</text>
+
+  <rect x="420" y="110" width="660" height="480" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="460" y="170" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">Selected diff summary</text>
+  <rect x="460" y="210" width="580" height="40" rx="10" fill="#e2e8f0"/>
+  <rect x="460" y="270" width="580" height="40" rx="10" fill="#e2e8f0"/>
+  <rect x="460" y="330" width="580" height="40" rx="10" fill="#e2e8f0"/>
+  <rect x="460" y="390" width="580" height="40" rx="10" fill="#e2e8f0"/>
+  <rect x="460" y="450" width="580" height="40" rx="10" fill="#e2e8f0"/>
+  <text x="460" y="540" font-family="Inter, Arial, sans-serif" font-size="14" fill="#64748b">Curator highlights sections that deserve deeper review.</text>
+</svg>
