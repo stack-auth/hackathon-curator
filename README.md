@@ -6,13 +6,13 @@ Curator is a tiny toolkit that captures GitHub diffs, scores every token for ris
 
 ## Product screenshots
 
-![Run Curator on a PR](docs/screenshots/pr-run-curator.svg)
+![Run Curator button on a GitHub pull request](docs/screenshots/pr-run-curator.svg)
 
-![Token risk heatmap overlay](docs/screenshots/heatmap-overlay.svg)
+![Token risk heatmap overlay on diff content](docs/screenshots/heatmap-overlay.svg)
 
-![Curator reviewer panel](docs/screenshots/curator-sidebar.svg)
+![Curator reviewer panel with highlighted diffs](docs/screenshots/curator-sidebar.svg)
 
-![Curator flow from diff to guidance](docs/screenshots/curator-flow.svg)
+![Curator flow from diff capture to reviewer guidance](docs/screenshots/curator-flow.svg)
 
 ## Run the algo server
 ```
