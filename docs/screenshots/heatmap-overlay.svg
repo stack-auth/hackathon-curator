@@ -1,4 +1,5 @@
 <svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <title>Token risk heatmap overlay on diff content</title>
   <rect width="1200" height="720" fill="#0f172a"/>
   <rect x="60" y="60" width="1080" height="600" rx="18" fill="#111827" stroke="#1f2937" stroke-width="2"/>
   <text x="96" y="120" font-family="Inter, Arial, sans-serif" font-size="24" fill="#f8fafc">Curator Heatmap</text>

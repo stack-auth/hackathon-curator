@@ -1,4 +1,5 @@
 <svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <title>Curator reviewer panel with highlighted diffs</title>
   <rect width="1200" height="720" fill="#f1f5f9"/>
   <rect x="60" y="60" width="1080" height="600" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
   <rect x="60" y="60" width="320" height="600" rx="18" fill="#0f172a"/>
